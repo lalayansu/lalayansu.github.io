@@ -65,7 +65,7 @@
     <div id="error" class="hidden bg-red-950 border border-red-800 text-red-300 rounded-3xl p-6 mb-8 text-center"></div>
 
     <div id="loading" class="hidden text-center py-12 text-zinc-400">
-      Fetching historical prices from CoinGecko...
+      Fetching historical prices...
     </div>
 
     <div id="results" class="hidden">
@@ -161,12 +161,11 @@
         const fromTs = Math.floor(startDate.getTime() / 1000);
         const toTs = Math.floor(Date.now() / 1000);
 
-        // Use CORS proxy
         const apiUrl = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart/range?vs_currency=usd&from=${fromTs}&to=${toTs}&precision=2`;
         const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
 
         const res = await fetch(proxyUrl);
-        if (!res.ok) throw new Error("Network error");
+        if (!res.ok) throw new Error("API error");
 
         const data = await res.json();
         const priceMap = new Map();
@@ -175,7 +174,6 @@
           priceMap.set(date, price);
         });
 
-        // Simulation
         let totalInvested = 0;
         let totalCoins = 0;
         let current = new Date(startDate);
@@ -197,7 +195,7 @@
         const valueAtEndDCA = totalCoins * priceAtEnd;
         const valueToday = totalCoins * getClosestPrice(priceMap, todayKey);
 
-        // Fill summary, table, chart (same as before)
+        // Summary
         document.getElementById('assetName').textContent = assetName;
         document.getElementById('totalInvested').textContent = `$${totalInvested.toLocaleString()}`;
         document.getElementById('totalCoins').innerHTML = `${totalCoins.toFixed(6)} <span class="text-sm text-zinc-400">${assetName.split(' ')[0]}</span>`;
@@ -208,7 +206,49 @@
         const roiToday = ((valueToday - totalInvested) / totalInvested) * 100;
         document.getElementById('roiToday').innerHTML = `<span class="${roiToday >= 0 ? 'text-green-400' : 'text-red-400'}">${roiToday.toFixed(1)}%</span>`;
 
-        // (Table and chart code is the same as previous version - omitted for brevity but fully included in the real file)
+        // Table and chart code (same as before)
+        const tableBody = document.getElementById('holdBody');
+        tableBody.innerHTML = '';
+        const chartDates = [];
+        const chartValues = [];
+
+        const holdLabels = ["End of DCA"];
+        const holdDates = [endKey];
+
+        for (let y = 1; y <= 4; y++) {
+          const target = new Date(endDate);
+          target.setFullYear(target.getFullYear() + y);
+          if (target > new Date()) break;
+          holdDates.push(target.toISOString().split('T')[0]);
+          holdLabels.push(`+${y} year${y > 1 ? 's' : ''}`);
+        }
+        holdDates.push(new Date().toISOString().split('T')[0]);
+        holdLabels.push("Today");
+
+        holdDates.forEach((dateStr, i) => {
+          const price = getClosestPrice(priceMap, dateStr);
+          const value = totalCoins * price;
+          const roi = ((value - totalInvested) / totalInvested) * 100;
+          const row = document.createElement('tr');
+          row.className = 'border-b border-zinc-700 last:border-none';
+          row.innerHTML = `
+            <td class="py-4">${holdLabels[i]}</td>
+            <td class="text-right py-4">${dateStr}</td>
+            <td class="text-right py-4 font-semibold">$${value.toLocaleString('en-US', {maximumFractionDigits: 0})}</td>
+            <td class="text-right py-4 ${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(1)}%</td>
+          `;
+          tableBody.appendChild(row);
+          chartDates.push(dateStr);
+          chartValues.push(value);
+        });
+
+        if (chartInstance) chartInstance.destroy();
+        const ctx = document.getElementById('valueChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: { labels: chartDates, datasets: [{ label: 'Portfolio Value ($)', data: chartValues, borderColor: '#22c55e', borderWidth: 3, tension: 0.3, pointRadius: 0 }] },
+          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#27272a' }, ticks: { color: '#a3a3a3' } }, x: { grid: { color: '#27272a' }, ticks: { color: '#a3a3a3', maxRotation: 45 } } }}
+        });
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('results').classList.remove('hidden');
@@ -217,7 +257,7 @@
         console.error(err);
         document.getElementById('loading').classList.add('hidden');
         const errDiv = document.getElementById('error');
-        errDiv.textContent = "Could not fetch price data. Please try a shorter period or refresh the page.";
+        errDiv.textContent = "Could not fetch price data. Please try a shorter period (max 5 years) or refresh the page.";
         errDiv.classList.remove('hidden');
       }
     }
