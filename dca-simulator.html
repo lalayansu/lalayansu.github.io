@@ -152,12 +152,13 @@
       </div>
 
       <!-- CHART -->
-      <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-10">
-        <h2 class="text-2xl font-semibold mb-6">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-10">
+        <h2 class="text-xl md:text-2xl font-semibold mb-4 md:mb-6">
           Portfolio Growth
         </h2>
-
-        <canvas id="valueChart" height="120"></canvas>
+        <div class="relative w-full h-[320px] md:h-[520px]">
+          <canvas id="valueChart"></canvas>
+        </div>
       </div>
 
       <!-- TABLE -->
@@ -357,45 +358,85 @@
 
         chartInstance = new Chart(ctx, {
           type: 'line',
-
+        
           data: {
             labels,
-
+        
             datasets: [{
               label: 'Portfolio Value ($)',
               data: chartData,
               borderWidth: 2,
-              tension: 0.3
+              tension: 0.35,
+              pointRadius: 0,
+              fill: false
             }]
           },
-
+        
           options: {
             responsive: true,
-
+            maintainAspectRatio: false,
+        
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+        
             plugins: {
+        
               legend: {
                 labels: {
-                  color: '#ffffff'
+                  color: '#ffffff',
+        
+                  font: {
+                    size: window.innerWidth < 768 ? 11 : 14
+                  }
                 }
+              },
+        
+              tooltip: {
+                mode: 'index',
+                intersect: false
               }
             },
-
+        
             scales: {
+        
               x: {
+        
                 ticks: {
-                  color: '#a1a1aa'
+                  color: '#a1a1aa',
+        
+                  maxTicksLimit:
+                    window.innerWidth < 768
+                      ? 5
+                      : 12,
+        
+                  font: {
+                    size:
+                      window.innerWidth < 768
+                        ? 10
+                        : 12
+                  }
                 },
-
+        
                 grid: {
                   color: '#27272a'
                 }
               },
-
+        
               y: {
+        
                 ticks: {
-                  color: '#a1a1aa'
+                  color: '#a1a1aa',
+        
+                  font: {
+                    size:
+                      window.innerWidth < 768
+                        ? 10
+                        : 12
+                  }
                 },
-
+        
                 grid: {
                   color: '#27272a'
                 }
