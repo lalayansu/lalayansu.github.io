@@ -326,28 +326,45 @@
         const to =
           new Date(endStr).getTime() + 86400000;
 
-        // DCA PERIOD
-        const api =
-          `https://data-api.binance.vision/api/v3/klines` +
-          `?symbol=${symbol}` +
-          `&interval=1d` +
-          `&startTime=${from}` +
-          `&endTime=${to}` +
-          `&limit=1000`;
+          // FETCH ALL DCA DATA WITH PAGINATION
 
-        const response =
-          await fetch(api);
+let data = [];
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+let currentFetchStart = from;
 
-        const data =
-          await response.json();
+while (currentFetchStart < to) {
 
-        if (!Array.isArray(data) || !data.length) {
-          throw new Error("No market data returned");
-        }
+  const api =
+    `https://data-api.binance.vision/api/v3/klines` +
+    `?symbol=${symbol}` +
+    `&interval=1d` +
+    `&startTime=${currentFetchStart}` +
+    `&endTime=${to}` +
+    `&limit=1000`;
+
+  const response =
+    await fetch(api);
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const chunk =
+    await response.json();
+
+  if (!Array.isArray(chunk) || !chunk.length) {
+    break;
+  }
+
+  data.push(...chunk);
+
+  currentFetchStart =
+    chunk[chunk.length - 1][0] + 86400000;
+}
+
+if (!data.length) {
+  throw new Error("No market data returned");
+}
 
         // LIVE PRICE
         const liveResponse =
