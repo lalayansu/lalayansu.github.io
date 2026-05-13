@@ -42,7 +42,6 @@
 
         <!-- ASSET -->
         <div>
-
           <label class="block text-sm text-zinc-400 mb-2">
             Asset
           </label>
@@ -56,12 +55,10 @@
             <option value="SOLUSDT">Solana (SOL)</option>
             <option value="DOGEUSDT">Dogecoin (DOGE)</option>
           </select>
-
         </div>
 
         <!-- DAILY -->
         <div>
-
           <label class="block text-sm text-zinc-400 mb-2">
             Daily Investment ($)
           </label>
@@ -72,12 +69,10 @@
             value="25"
             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
           />
-
         </div>
 
         <!-- START -->
         <div>
-
           <label class="block text-sm text-zinc-400 mb-2">
             Start Date
           </label>
@@ -87,12 +82,10 @@
             type="date"
             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
           />
-
         </div>
 
         <!-- END -->
         <div>
-
           <label class="block text-sm text-zinc-400 mb-2">
             End Date
           </label>
@@ -102,7 +95,6 @@
             type="date"
             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
           />
-
         </div>
 
       </div>
@@ -111,14 +103,14 @@
       <div class="flex flex-col md:flex-row gap-4 mt-8">
 
         <button
-          onclick="runSimulation()"
+          id="runBtn"
           class="flex-1 bg-white text-black font-semibold py-4 rounded-3xl hover:bg-zinc-200 transition"
         >
           🚀 Run Simulation
         </button>
 
         <button
-          onclick="setDefault200Days()"
+          id="daysBtn"
           class="px-8 py-4 border border-zinc-700 rounded-3xl hover:border-zinc-500 transition"
         >
           Use 200 Days
@@ -149,68 +141,45 @@
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
 
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
           <p class="text-zinc-400 text-sm mb-2">
             Total Invested
           </p>
 
-          <p
-            id="totalInvested"
-            class="text-4xl font-bold"
-          >
+          <p id="totalInvested" class="text-4xl font-bold">
             $0
           </p>
-
         </div>
 
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
           <p class="text-zinc-400 text-sm mb-2">
             Coins Accumulated
           </p>
 
-          <p
-            id="totalCoins"
-            class="text-4xl font-bold"
-          >
+          <p id="totalCoins" class="text-4xl font-bold">
             0
           </p>
-
         </div>
 
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
           <p class="text-zinc-400 text-sm mb-2">
             Portfolio Value
           </p>
 
-          <p
-            id="valueToday"
-            class="text-4xl font-bold"
-          >
+          <p id="valueToday" class="text-4xl font-bold">
             $0
           </p>
 
-          <p
-            id="roiToday"
-            class="mt-3 text-sm"
-          ></p>
-
+          <p id="roiToday" class="mt-3 text-sm"></p>
         </div>
 
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
           <p class="text-zinc-400 text-sm mb-2">
             Current Asset Price
           </p>
 
-          <p
-            id="currentPrice"
-            class="text-4xl font-bold"
-          >
+          <p id="currentPrice" class="text-4xl font-bold">
             $0
           </p>
-
         </div>
 
       </div>
@@ -238,31 +207,13 @@
         <table class="w-full min-w-[760px]">
 
           <thead>
-
             <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
-
-              <th class="text-left py-4">
-                Date
-              </th>
-
-              <th class="text-right py-4">
-                Price
-              </th>
-
-              <th class="text-right py-4">
-                Bought
-              </th>
-
-              <th class="text-right py-4">
-                Total Coins
-              </th>
-
-              <th class="text-right py-4">
-                Portfolio Value
-              </th>
-
+              <th class="text-left py-4">Date</th>
+              <th class="text-right py-4">Price</th>
+              <th class="text-right py-4">Bought</th>
+              <th class="text-right py-4">Total Coins</th>
+              <th class="text-right py-4">Portfolio Value</th>
             </tr>
-
           </thead>
 
           <tbody id="tableBody"></tbody>
@@ -279,46 +230,99 @@
 
     let chartInstance = null;
 
-    async function runSimulation() {
+    document
+      .getElementById('runBtn')
+      .addEventListener('click', runSimulation);
 
-      const symbol =
-        document.getElementById('asset').value;
+    document
+      .getElementById('daysBtn')
+      .addEventListener('click', setDefault200Days);
 
-      const assetLabel =
-        document.getElementById('asset')
-          .options[
-            document.getElementById('asset').selectedIndex
-          ].text;
+    async function fetchAllKlines(symbol, startTime, endTime) {
 
-      const coinName =
-        assetLabel.match(/\((.*?)\)/)[1];
+      let allData = [];
+      let currentStart = startTime;
 
-      const dailyAmount =
-        parseFloat(
-          document.getElementById('dailyAmount').value
-        ) || 25;
+      while (currentStart < endTime) {
 
-      const startStr =
-        document.getElementById('startDate').value;
+        const url =
+          `https://data-api.binance.vision/api/v3/klines` +
+          `?symbol=${symbol}` +
+          `&interval=1d` +
+          `&startTime=${currentStart}` +
+          `&endTime=${endTime}` +
+          `&limit=1000`;
 
-      const endStr =
-        document.getElementById('endDate').value;
+        const response =
+          await fetch(url);
 
-      if (!startStr || !endStr) {
-        alert("Please select dates");
-        return;
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const chunk =
+          await response.json();
+
+        if (!chunk.length) {
+          break;
+        }
+
+        allData.push(...chunk);
+
+        currentStart =
+          chunk[chunk.length - 1][0] + 86400000;
+
+        if (chunk.length < 1000) {
+          break;
+        }
       }
 
-      document.getElementById('loading')
-        .classList.remove('hidden');
+      return allData;
+    }
 
-      document.getElementById('results')
-        .classList.add('hidden');
-
-      document.getElementById('error')
-        .classList.add('hidden');
+    async function runSimulation() {
 
       try {
+
+        document
+          .getElementById('loading')
+          .classList.remove('hidden');
+
+        document
+          .getElementById('results')
+          .classList.add('hidden');
+
+        document
+          .getElementById('error')
+          .classList.add('hidden');
+
+        const symbol =
+          document.getElementById('asset').value;
+
+        const assetLabel =
+          document.getElementById('asset')
+            .options[
+              document.getElementById('asset').selectedIndex
+            ].text;
+
+        const coinName =
+          assetLabel.match(/\((.*?)\)/)[1];
+
+        const dailyAmount =
+          parseFloat(
+            document.getElementById('dailyAmount').value
+          ) || 25;
+
+        const startStr =
+          document.getElementById('startDate').value;
+
+        const endStr =
+          document.getElementById('endDate').value;
+
+        if (!startStr || !endStr) {
+          alert("Please select dates");
+          return;
+        }
 
         const from =
           new Date(startStr).getTime();
@@ -326,45 +330,21 @@
         const to =
           new Date(endStr).getTime() + 86400000;
 
-          // FETCH ALL DCA DATA WITH PAGINATION
+        // DCA DATA
+        const data =
+          await fetchAllKlines(
+            symbol,
+            from,
+            to
+          );
 
-let data = [];
-
-let currentFetchStart = from;
-
-while (currentFetchStart < to) {
-
-  const api =
-    `https://data-api.binance.vision/api/v3/klines` +
-    `?symbol=${symbol}` +
-    `&interval=1d` +
-    `&startTime=${currentFetchStart}` +
-    `&endTime=${to}` +
-    `&limit=1000`;
-
-  const response =
-    await fetch(api);
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
-  const chunk =
-    await response.json();
-
-  if (!Array.isArray(chunk) || !chunk.length) {
-    break;
-  }
-
-  data.push(...chunk);
-
-  currentFetchStart =
-    chunk[chunk.length - 1][0] + 86400000;
-}
-
-if (!data.length) {
-  throw new Error("No market data returned");
-}
+        // FUTURE DATA
+        const futureData =
+          await fetchAllKlines(
+            symbol,
+            to,
+            Date.now()
+          );
 
         // LIVE PRICE
         const liveResponse =
@@ -372,17 +352,16 @@ if (!data.length) {
             `https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`
           );
 
-        const liveData =
+        const liveJson =
           await liveResponse.json();
 
         const currentPrice =
-          parseFloat(liveData.price);
+          parseFloat(liveJson.price);
 
         let totalInvested = 0;
         let totalCoins = 0;
 
         const labels = [];
-
         const dcaData = [];
         const holdData = [];
 
@@ -391,10 +370,11 @@ if (!data.length) {
 
         tableBody.innerHTML = '';
 
-        // DCA LOOP
+        // MAIN DCA PERIOD
         data.forEach((candle) => {
 
-          const timestamp = candle[0];
+          const timestamp =
+            candle[0];
 
           const closePrice =
             parseFloat(candle[4]);
@@ -446,67 +426,29 @@ if (!data.length) {
           `;
         });
 
-        // FUTURE HOLDING DATA
-        const today =
-          new Date();
+        // HOLDING AFTER DCA
+        futureData.forEach((candle) => {
 
-        const afterEndStart =
-          new Date(endStr).getTime() + 86400000;
+          const timestamp =
+            candle[0];
 
-        const todayTime =
-          today.getTime();
+          const closePrice =
+            parseFloat(candle[4]);
 
-        currentFetchStart =
-          afterEndStart;
+          const date =
+            new Date(timestamp)
+              .toISOString()
+              .split('T')[0];
 
-        while (currentFetchStart < todayTime) {
+          const portfolioValue =
+            totalCoins * closePrice;
 
-          const futureApi =
-            `https://data-api.binance.vision/api/v3/klines` +
-            `?symbol=${symbol}` +
-            `&interval=1d` +
-            `&startTime=${currentFetchStart}` +
-            `&endTime=${todayTime}` +
-            `&limit=1000`;
+          labels.push(date);
 
-          const futureResponse =
-            await fetch(futureApi);
+          dcaData.push(null);
 
-          const futureData =
-            await futureResponse.json();
-
-          if (!futureData.length) {
-            break;
-          }
-
-          futureData.forEach((candle) => {
-
-            const timestamp =
-              candle[0];
-
-            const closePrice =
-              parseFloat(candle[4]);
-
-            const date =
-              new Date(timestamp)
-                .toISOString()
-                .split('T')[0];
-
-            const portfolioValue =
-              totalCoins * closePrice;
-
-            labels.push(date);
-
-            dcaData.push(null);
-
-            holdData.push(portfolioValue);
-          });
-
-          currentFetchStart =
-            futureData[
-              futureData.length - 1
-            ][0] + 86400000;
-        }
+          holdData.push(portfolioValue);
+        });
 
         // SUMMARY
         const portfolioToday =
@@ -516,23 +458,28 @@ if (!data.length) {
           ((portfolioToday - totalInvested) /
             totalInvested) * 100;
 
-        document.getElementById('totalInvested')
+        document
+          .getElementById('totalInvested')
           .textContent =
           `$${totalInvested.toFixed(2)}`;
 
-        document.getElementById('totalCoins')
+        document
+          .getElementById('totalCoins')
           .textContent =
           `${totalCoins.toFixed(6)} ${coinName}`;
 
-        document.getElementById('valueToday')
+        document
+          .getElementById('valueToday')
           .textContent =
           `$${portfolioToday.toFixed(2)}`;
 
-        document.getElementById('currentPrice')
+        document
+          .getElementById('currentPrice')
           .textContent =
           `$${currentPrice.toLocaleString()}`;
 
-        document.getElementById('roiToday')
+        document
+          .getElementById('roiToday')
           .innerHTML =
           `<span class="${
             roi >= 0
@@ -550,158 +497,132 @@ if (!data.length) {
           chartInstance.destroy();
         }
 
-        chartInstance = new Chart(ctx, {
+        chartInstance =
+          new Chart(ctx, {
 
-          type: 'line',
+            type: 'line',
 
-          data: {
+            data: {
 
-            labels,
+              labels,
 
-            datasets: [
+              datasets: [
 
-              {
-                label: 'DCA Period',
-                data: dcaData,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0,
-                borderColor: '#ffffff',
-                fill: false
-              },
+                {
+                  label: 'DCA Period',
+                  data: dcaData,
+                  borderColor: '#ffffff',
+                  borderWidth: 3,
+                  pointRadius: 0,
+                  tension: 0.35
+                },
 
-              {
-                label: 'Holding After DCA',
-                data: holdData,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0,
-                borderColor: '#fbbf24',
-                fill: false
-              }
+                {
+                  label: 'Holding After DCA',
+                  data: holdData,
+                  borderColor: '#fbbf24',
+                  borderWidth: 3,
+                  pointRadius: 0,
+                  tension: 0.35
+                }
 
-            ]
-          },
-
-          options: {
-
-            responsive: true,
-            maintainAspectRatio: false,
-
-            interaction: {
-              intersect: false,
-              mode: 'index'
+              ]
             },
 
-            plugins: {
+            options: {
 
-              legend: {
+              responsive: true,
+              maintainAspectRatio: false,
 
-                labels: {
-
-                  color: '#ffffff',
-
-                  font: {
-                    size:
-                      window.innerWidth < 768
-                        ? 11
-                        : 14
-                  }
-                }
-              },
-
-              tooltip: {
+              interaction: {
                 mode: 'index',
                 intersect: false
-              }
-            },
+              },
 
-            scales: {
+              plugins: {
 
-              x: {
+                legend: {
 
-                ticks: {
-
-                  color: '#a1a1aa',
-
-                  maxTicksLimit:
-                    window.innerWidth < 768
-                      ? 4
-                      : 8,
-
-                  callback: function(value) {
-
-                    const raw =
-                      this.getLabelForValue(value);
-
-                    const date =
-                      new Date(raw);
-
-                    return date.toLocaleDateString(
-                      undefined,
-                      {
-                        year: 'numeric',
-                        month: 'short'
-                      }
-                    );
-                  },
-
-                  font: {
-
-                    size:
-                      window.innerWidth < 768
-                        ? 10
-                        : 12
+                  labels: {
+                    color: '#ffffff'
                   }
-                },
-
-                grid: {
-                  color: '#27272a'
                 }
               },
 
-              y: {
+              scales: {
 
-                ticks: {
+                x: {
 
-                  color: '#a1a1aa',
+                  ticks: {
 
-                  font: {
+                    color: '#a1a1aa',
 
-                    size:
+                    maxTicksLimit:
                       window.innerWidth < 768
-                        ? 10
-                        : 12
+                        ? 4
+                        : 8,
+
+                    callback: function(value) {
+
+                      const raw =
+                        this.getLabelForValue(value);
+
+                      const date =
+                        new Date(raw);
+
+                      return date.toLocaleDateString(
+                        undefined,
+                        {
+                          year: 'numeric',
+                          month: 'short'
+                        }
+                      );
+                    }
+                  },
+
+                  grid: {
+                    color: '#27272a'
                   }
                 },
 
-                grid: {
-                  color: '#27272a'
+                y: {
+
+                  ticks: {
+                    color: '#a1a1aa'
+                  },
+
+                  grid: {
+                    color: '#27272a'
+                  }
                 }
               }
             }
-          }
-        });
+          });
 
-        document.getElementById('loading')
+        document
+          .getElementById('loading')
           .classList.add('hidden');
 
-        document.getElementById('results')
+        document
+          .getElementById('results')
           .classList.remove('hidden');
 
       } catch (error) {
 
         console.error(error);
 
-        document.getElementById('loading')
+        document
+          .getElementById('loading')
           .classList.add('hidden');
 
-        document.getElementById('error')
-          .innerHTML =
-          `Could not fetch price data.<br><br>${error.message}`;
-
-        document.getElementById('error')
+        document
+          .getElementById('error')
           .classList.remove('hidden');
+
+        document
+          .getElementById('error')
+          .innerHTML =
+          `Could not fetch data.<br><br>${error.message}`;
       }
     }
 
@@ -717,11 +638,13 @@ if (!data.length) {
         start.getDate() - 200
       );
 
-      document.getElementById('startDate')
+      document
+        .getElementById('startDate')
         .value =
         start.toISOString().split('T')[0];
 
-      document.getElementById('endDate')
+      document
+        .getElementById('endDate')
         .value =
         end.toISOString().split('T')[0];
 
@@ -735,7 +658,8 @@ if (!data.length) {
           .toISOString()
           .split('T')[0];
 
-      document.getElementById('endDate')
+      document
+        .getElementById('endDate')
         .value = today;
 
       const start =
@@ -745,7 +669,8 @@ if (!data.length) {
         start.getDate() - 200
       );
 
-      document.getElementById('startDate')
+      document
+        .getElementById('startDate')
         .value =
         start.toISOString().split('T')[0];
     };
