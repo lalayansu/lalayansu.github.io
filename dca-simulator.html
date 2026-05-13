@@ -264,7 +264,9 @@
         let totalCoins = 0;
 
         const labels = [];
-        const chartData = [];
+
+        const dcaData = [];
+        const holdData = [];
 
         const tableBody =
           document.getElementById('tableBody');
@@ -290,7 +292,9 @@
             totalCoins * closePrice;
 
           labels.push(date);
-          chartData.push(portfolioValue);
+
+          dcaData.push(portfolioValue);
+          holdData.push(null);
 
           tableBody.innerHTML += `
             <tr class="border-b border-zinc-800/50 text-sm">
@@ -315,6 +319,52 @@
           `;
         });
 
+// Fetch additional data AFTER DCA period until today
+
+const today = new Date();
+
+const afterEndStart =
+  new Date(endStr).getTime() + 86400000;
+
+const todayTime = today.getTime();
+
+const futureApi =
+  `https://data-api.binance.vision/api/v3/klines` +
+  `?symbol=${symbol}` +
+  `&interval=1d` +
+  `&startTime=${afterEndStart}` +
+  `&endTime=${todayTime}` +
+  `&limit=1000`;
+
+const futureResponse = await fetch(futureApi);
+
+const futureData = await futureResponse.json();
+
+// Continue chart after DCA finished
+
+futureData.forEach((candle, index) => {
+
+  const timestamp = candle[0];
+
+  const closePrice = parseFloat(candle[4]);
+
+  const date =
+    new Date(timestamp)
+      .toISOString()
+      .split('T')[0];
+
+  const portfolioValue =
+    totalCoins * closePrice;
+
+  labels.push(date);
+
+  // Keep first dataset stopped
+  dcaData.push(null);
+
+  // Start dashed holding line
+  holdData.push(portfolioValue);
+});
+        
         const portfolioToday =
           totalCoins * currentPrice;
 
@@ -362,14 +412,29 @@
           data: {
             labels,
         
-            datasets: [{
-              label: 'Portfolio Value ($)',
-              data: chartData,
-              borderWidth: 2,
-              tension: 0.35,
-              pointRadius: 0,
-              fill: false
-            }]
+            datasets: [
+
+  {
+    label: 'DCA Period',
+    data: dcaData,
+    borderWidth: 3,
+    tension: 0.35,
+    pointRadius: 0,
+    borderColor: '#ffffff',
+    fill: false
+  },
+
+  {
+    label: 'Holding After DCA',
+    data: holdData,
+    borderWidth: 3,
+    tension: 0.35,
+    pointRadius: 0,
+    borderDash: [8, 8],
+    borderColor: '#f5b942',
+    fill: false
+  }
+]
           },
         
           options: {
