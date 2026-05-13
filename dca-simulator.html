@@ -246,22 +246,19 @@
       while (currentStart < endTime) {
 
         const url =
-          `https://data-api.binance.vision/api/v3/klines` +
+          `https://api.binance.com/api/v3/klines` +
           `?symbol=${symbol}` +
           `&interval=1d` +
           `&startTime=${currentStart}` +
-          `&endTime=${endTime}` +
-          `&limit=1000`;
+          `&endTime=${endTime}`;
 
-        const response =
-          await fetch(url);
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const chunk =
-          await response.json();
+        const chunk = await response.json();
 
         if (!chunk.length) {
           break;
@@ -269,10 +266,9 @@
 
         allData.push(...chunk);
 
-        currentStart =
-          chunk[chunk.length - 1][0] + 86400000;
+        currentStart = chunk[chunk.length - 1][0] + 86400000;
 
-        if (chunk.length < 1000) {
+        if (chunk.length < 500) {
           break;
         }
       }
@@ -324,39 +320,22 @@
           return;
         }
 
-        const from =
-          new Date(startStr).getTime();
-
-        const to =
-          new Date(endStr).getTime() + 86400000;
+        const from = new Date(startStr).getTime();
+        const to = new Date(endStr).getTime() + 86400000;
 
         // DCA DATA
-        const data =
-          await fetchAllKlines(
-            symbol,
-            from,
-            to
-          );
+        const data = await fetchAllKlines(symbol, from, to);
 
         // FUTURE DATA
-        const futureData =
-          await fetchAllKlines(
-            symbol,
-            to,
-            Date.now()
-          );
+        const futureData = await fetchAllKlines(symbol, to, Date.now());
 
         // LIVE PRICE
-        const liveResponse =
-          await fetch(
-            `https://data-api.binance.vision/api/v3/ticker/price?symbol=${symbol}`
-          );
+        const liveResponse = await fetch(
+          `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`
+        );
 
-        const liveJson =
-          await liveResponse.json();
-
-        const currentPrice =
-          parseFloat(liveJson.price);
+        const liveJson = await liveResponse.json();
+        const currentPrice = parseFloat(liveJson.price);
 
         let totalInvested = 0;
         let totalCoins = 0;
@@ -365,63 +344,35 @@
         const dcaData = [];
         const holdData = [];
 
-        const tableBody =
-          document.getElementById('tableBody');
-
+        const tableBody = document.getElementById('tableBody');
         tableBody.innerHTML = '';
 
         // MAIN DCA PERIOD
         data.forEach((candle) => {
 
-          const timestamp =
-            candle[0];
+          const timestamp = candle[0];
+          const closePrice = parseFloat(candle[4]);
 
-          const closePrice =
-            parseFloat(candle[4]);
+          const date = new Date(timestamp).toISOString().split('T')[0];
 
-          const date =
-            new Date(timestamp)
-              .toISOString()
-              .split('T')[0];
-
-          const bought =
-            dailyAmount / closePrice;
+          const bought = dailyAmount / closePrice;
 
           totalCoins += bought;
           totalInvested += dailyAmount;
 
-          const portfolioValue =
-            totalCoins * closePrice;
+          const portfolioValue = totalCoins * closePrice;
 
           labels.push(date);
-
           dcaData.push(portfolioValue);
-
           holdData.push(null);
 
           tableBody.innerHTML += `
             <tr class="border-b border-zinc-800/50 text-sm">
-
-              <td class="py-4">
-                ${date}
-              </td>
-
-              <td class="py-4 text-right">
-                $${closePrice.toLocaleString()}
-              </td>
-
-              <td class="py-4 text-right">
-                ${bought.toFixed(6)} ${coinName}
-              </td>
-
-              <td class="py-4 text-right">
-                ${totalCoins.toFixed(6)}
-              </td>
-
-              <td class="py-4 text-right">
-                $${portfolioValue.toFixed(2)}
-              </td>
-
+              <td class="py-4">${date}</td>
+              <td class="py-4 text-right">$${closePrice.toLocaleString()}</td>
+              <td class="py-4 text-right">${bought.toFixed(6)} ${coinName}</td>
+              <td class="py-4 text-right">${totalCoins.toFixed(6)}</td>
+              <td class="py-4 text-right">$${portfolioValue.toFixed(2)}</td>
             </tr>
           `;
         });
@@ -429,250 +380,130 @@
         // HOLDING AFTER DCA
         futureData.forEach((candle) => {
 
-          const timestamp =
-            candle[0];
+          const timestamp = candle[0];
+          const closePrice = parseFloat(candle[4]);
 
-          const closePrice =
-            parseFloat(candle[4]);
+          const date = new Date(timestamp).toISOString().split('T')[0];
 
-          const date =
-            new Date(timestamp)
-              .toISOString()
-              .split('T')[0];
-
-          const portfolioValue =
-            totalCoins * closePrice;
+          const portfolioValue = totalCoins * closePrice;
 
           labels.push(date);
-
           dcaData.push(null);
-
           holdData.push(portfolioValue);
         });
 
         // SUMMARY
-        const portfolioToday =
-          totalCoins * currentPrice;
+        const portfolioToday = totalCoins * currentPrice;
+        const roi = ((portfolioToday - totalInvested) / totalInvested) * 100;
 
-        const roi =
-          ((portfolioToday - totalInvested) /
-            totalInvested) * 100;
+        document.getElementById('totalInvested').textContent = `$${totalInvested.toFixed(2)}`;
+        document.getElementById('totalCoins').textContent = `${totalCoins.toFixed(6)} ${coinName}`;
+        document.getElementById('valueToday').textContent = `$${portfolioToday.toFixed(2)}`;
+        document.getElementById('currentPrice').textContent = `$${currentPrice.toLocaleString()}`;
 
-        document
-          .getElementById('totalInvested')
-          .textContent =
-          `$${totalInvested.toFixed(2)}`;
-
-        document
-          .getElementById('totalCoins')
-          .textContent =
-          `${totalCoins.toFixed(6)} ${coinName}`;
-
-        document
-          .getElementById('valueToday')
-          .textContent =
-          `$${portfolioToday.toFixed(2)}`;
-
-        document
-          .getElementById('currentPrice')
-          .textContent =
-          `$${currentPrice.toLocaleString()}`;
-
-        document
-          .getElementById('roiToday')
-          .innerHTML =
-          `<span class="${
-            roi >= 0
-              ? 'text-green-400'
-              : 'text-red-400'
-          }">
+        document.getElementById('roiToday').innerHTML = `
+          <span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">
             ${roi.toFixed(2)}%
           </span>`;
 
         // CHART
-        const ctx =
-          document.getElementById('valueChart');
+        const ctx = document.getElementById('valueChart');
 
         if (chartInstance) {
           chartInstance.destroy();
         }
 
-        chartInstance =
-          new Chart(ctx, {
-
-            type: 'line',
-
-            data: {
-
-              labels,
-
-              datasets: [
-
-                {
-                  label: 'DCA Period',
-                  data: dcaData,
-                  borderColor: '#ffffff',
-                  borderWidth: 3,
-                  pointRadius: 0,
-                  tension: 0.35
-                },
-
-                {
-                  label: 'Holding After DCA',
-                  data: holdData,
-                  borderColor: '#fbbf24',
-                  borderWidth: 3,
-                  pointRadius: 0,
-                  tension: 0.35
-                }
-
-              ]
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'DCA Period',
+                data: dcaData,
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.35
+              },
+              {
+                label: 'Holding After DCA',
+                data: holdData,
+                borderColor: '#fbbf24',
+                borderWidth: 3,
+                pointRadius: 0,
+                tension: 0.35
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
             },
-
-            options: {
-
-              responsive: true,
-              maintainAspectRatio: false,
-
-              interaction: {
-                mode: 'index',
-                intersect: false
-              },
-
-              plugins: {
-
-                legend: {
-
-                  labels: {
-                    color: '#ffffff'
-                  }
-                }
-              },
-
-              scales: {
-
-                x: {
-
-                  ticks: {
-
-                    color: '#a1a1aa',
-
-                    maxTicksLimit:
-                      window.innerWidth < 768
-                        ? 4
-                        : 8,
-
-                    callback: function(value) {
-
-                      const raw =
-                        this.getLabelForValue(value);
-
-                      const date =
-                        new Date(raw);
-
-                      return date.toLocaleDateString(
-                        undefined,
-                        {
-                          year: 'numeric',
-                          month: 'short'
-                        }
-                      );
-                    }
-                  },
-
-                  grid: {
-                    color: '#27272a'
+            plugins: {
+              legend: {
+                labels: { color: '#ffffff' }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: '#a1a1aa',
+                  maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
+                  callback: function(value) {
+                    const raw = this.getLabelForValue(value);
+                    const date = new Date(raw);
+                    return date.toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short'
+                    });
                   }
                 },
-
-                y: {
-
-                  ticks: {
-                    color: '#a1a1aa'
-                  },
-
-                  grid: {
-                    color: '#27272a'
-                  }
-                }
+                grid: { color: '#27272a' }
+              },
+              y: {
+                ticks: { color: '#a1a1aa' },
+                grid: { color: '#27272a' }
               }
             }
-          });
+          }
+        });
 
-        document
-          .getElementById('loading')
-          .classList.add('hidden');
-
-        document
-          .getElementById('results')
-          .classList.remove('hidden');
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('results').classList.remove('hidden');
 
       } catch (error) {
-
         console.error(error);
-
-        document
-          .getElementById('loading')
-          .classList.add('hidden');
-
-        document
-          .getElementById('error')
-          .classList.remove('hidden');
-
-        document
-          .getElementById('error')
-          .innerHTML =
-          `Could not fetch data.<br><br>${error.message}`;
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error').classList.remove('hidden');
+        document.getElementById('error').innerHTML = `
+          Could not fetch data.<br><br>
+          ${error.message}
+        `;
       }
     }
 
     function setDefault200Days() {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 200);
 
-      const end =
-        new Date();
-
-      const start =
-        new Date();
-
-      start.setDate(
-        start.getDate() - 200
-      );
-
-      document
-        .getElementById('startDate')
-        .value =
-        start.toISOString().split('T')[0];
-
-      document
-        .getElementById('endDate')
-        .value =
-        end.toISOString().split('T')[0];
+      document.getElementById('startDate').value = start.toISOString().split('T')[0];
+      document.getElementById('endDate').value = end.toISOString().split('T')[0];
 
       runSimulation();
     }
 
     window.onload = () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('endDate').value = today;
 
-      const today =
-        new Date()
-          .toISOString()
-          .split('T')[0];
-
-      document
-        .getElementById('endDate')
-        .value = today;
-
-      const start =
-        new Date();
-
-      start.setDate(
-        start.getDate() - 200
-      );
-
-      document
-        .getElementById('startDate')
-        .value =
-        start.toISOString().split('T')[0];
+      const start = new Date();
+      start.setDate(start.getDate() - 200);
+      document.getElementById('startDate').value = start.toISOString().split('T')[0];
     };
 
   </script>
