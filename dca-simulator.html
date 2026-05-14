@@ -92,15 +92,14 @@
   </div>
 </div>
 
+<script>
 let dcaChartInstance = null;
 let battleChartInstance = null;
 let lastRunData = null;
 
-// Move element references to a scope accessible by all functions
 const elements = {};
 
 window.onload = () => {
-  // Initialize element references
   elements.asset = document.getElementById('asset');
   elements.dailyAmount = document.getElementById('dailyAmount');
   elements.startDate = document.getElementById('startDate');
@@ -117,14 +116,12 @@ window.onload = () => {
   elements.roiToday = document.getElementById('roiToday');
   elements.battleBtn = document.getElementById('battleBtn');
 
-  // Set default dates
   const t = new Date();
   const s = new Date();
   s.setDate(s.getDate() - 200);
   elements.endDate.value = t.toISOString().split('T')[0];
   elements.startDate.value = s.toISOString().split('T')[0];
 
-  // Attach Events
   document.getElementById('runBtn').onclick = runDCASimulation;
   document.getElementById('daysBtn').onclick = setDefault200Days;
   document.getElementById('battleBtn').onclick = runLumpSumBattle;
@@ -195,11 +192,11 @@ async function runDCASimulation() {
 
       const row = `
         <tr class="border-b border-zinc-800/50 text-sm">
-          <td class="py-4">${d}</td>
-          <td class="py-4 text-right">$${p.toLocaleString()}</td>
-          <td class="py-4 text-right">${bought.toFixed(6)} ${coinName}</td>
-          <td class="py-4 text-right">${totalCoins.toFixed(6)}</td>
-          <td class="py-4 text-right">$${v.toFixed(2)}</td>
+          <td class="py-4">\${d}</td>
+          <td class="py-4 text-right">$\${p.toLocaleString()}</td>
+          <td class="py-4 text-right">\${bought.toFixed(6)} \${coinName}</td>
+          <td class="py-4 text-right">\${totalCoins.toFixed(6)}</td>
+          <td class="py-4 text-right">$\${v.toFixed(2)}</td>
         </tr>`;
       elements.tableBody.insertAdjacentHTML('beforeend', row);
     });
@@ -218,11 +215,11 @@ async function runDCASimulation() {
     const portfolioToday = totalCoins * currentPrice;
     const roi = ((portfolioToday - totalInvested) / totalInvested) * 100;
 
-    elements.totalInvested.textContent = `$${totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    elements.totalCoins.textContent = `${totalCoins.toFixed(6)} ${coinName}`;
-    elements.valueToday.textContent = `$${portfolioToday.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    elements.currentPrice.textContent = `$${currentPrice.toLocaleString()}`;
-    elements.roiToday.innerHTML = `<span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(2)}%</span>`;
+    elements.totalInvested.textContent = `$\${totalInvested.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    elements.totalCoins.textContent = `\${totalCoins.toFixed(6)} \${coinName}`;
+    elements.valueToday.textContent = `$\${portfolioToday.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+    elements.currentPrice.textContent = `$\${currentPrice.toLocaleString()}`;
+    elements.roiToday.innerHTML = `<span class="\${roi >= 0 ? 'text-green-400' : 'text-red-400'}">\${roi.toFixed(2)}%</span>`;
 
     if (dcaChartInstance) dcaChartInstance.destroy();
     dcaChartInstance = new Chart(document.getElementById('dcaChart'), {
@@ -245,7 +242,7 @@ async function runDCASimulation() {
   } catch (e) {
     elements.loading.classList.add('hidden');
     elements.error.classList.remove('hidden');
-    elements.error.innerHTML = `Could not fetch data.<br><br>${e.message}`;
+    elements.error.innerHTML = `Could not fetch data.<br><br>\${e.message}`;
     console.error(e);
   }
 }
@@ -282,10 +279,10 @@ function runLumpSumBattle() {
   const dcaR = ((dcaCoins * currentPrice - totalInvested) / totalInvested) * 100;
   const lumpR = ((lumpCoins * currentPrice - totalInvested) / totalInvested) * 100;
 
-  document.getElementById('battleDcaValue').textContent = `$${(dcaCoins * currentPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-  document.getElementById('battleLumpValue').textContent = `$${(lumpCoins * currentPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-  document.getElementById('battleDcaRoi').innerHTML = `<span class="${dcaR >= 0 ? 'text-green-400' : 'text-red-400'}">${dcaR.toFixed(2)}%</span>`;
-  document.getElementById('battleLumpRoi').innerHTML = `<span class="${lumpR >= 0 ? 'text-green-400' : 'text-red-400'}">${lumpR.toFixed(2)}%</span>`;
+  document.getElementById('battleDcaValue').textContent = `$\${(dcaCoins * currentPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+  document.getElementById('battleLumpValue').textContent = `$\${(lumpCoins * currentPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+  document.getElementById('battleDcaRoi').innerHTML = `<span class="\${dcaR >= 0 ? 'text-green-400' : 'text-red-400'}">\${dcaR.toFixed(2)}%</span>`;
+  document.getElementById('battleLumpRoi').innerHTML = `<span class="\${lumpR >= 0 ? 'text-green-400' : 'text-red-400'}">\${lumpR.toFixed(2)}%</span>`;
 
   if (battleChartInstance) battleChartInstance.destroy();
   battleChartInstance = new Chart(document.getElementById('battleChart'), {
