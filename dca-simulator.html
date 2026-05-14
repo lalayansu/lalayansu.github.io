@@ -289,31 +289,83 @@
           dcaChartInstance = null;
         }
         dcaChartInstance = new Chart(dcaCtx, {
-          type: 'line',
-          data: {
-            labels,
-            datasets: [{ label: 'DCA Portfolio', data: dcaValues, borderColor: '#ffffff', borderWidth: 3, pointRadius: 0, tension: 0.35 }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#ffffff' } } },
-            scales: {
-              x: {
-                ticks: {
-                  color: '#a1a1aa',
-                  maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
-                  callback: function(value) {
-                    const raw = this.getLabelForValue(value);
-                    return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
-                  }
-                },
-                grid: { color: '#27272a' }
-              },
-              y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
-            }
+
+  type: 'line',
+
+  data: {
+    labels,
+    datasets: [{
+      label: 'DCA Portfolio',
+      data: dcaValues,
+      borderColor: '#ffffff',
+      borderWidth: 3,
+      pointRadius: 0,
+      tension: 0.35
+    }]
+  },
+
+  options: {
+
+    responsive: true,
+    maintainAspectRatio: false,
+
+    plugins: {
+      legend: {
+        labels: {
+          color: '#ffffff'
+        }
+      }
+    },
+
+    scales: {
+
+      x: {
+
+        ticks: {
+
+          color: '#a1a1aa',
+
+          maxTicksLimit:
+            window.innerWidth < 768
+              ? 4
+              : 8,
+
+          callback: function(value, index) {
+
+            const raw =
+              labels[index];
+
+            if (!raw) return '';
+
+            return new Date(raw)
+              .toLocaleDateString(
+                undefined,
+                {
+                  year: 'numeric',
+                  month: 'short'
+                }
+              );
           }
-        });
+        },
+
+        grid: {
+          color: '#27272a'
+        }
+      },
+
+      y: {
+
+        ticks: {
+          color: '#a1a1aa'
+        },
+
+        grid: {
+          color: '#27272a'
+        }
+      }
+    }
+  }
+});
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('dcaResults').classList.remove('hidden');
@@ -393,34 +445,98 @@
         battleChartInstance = null;
       }
       battleChartInstance = new Chart(battleCtx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: 'DCA Strategy', data: dcaBattleValues, borderColor: '#ffffff', borderWidth: 3, pointRadius: 0, tension: 0.35 },
-            { label: 'Lump Sum Strategy', data: lumpBattleValues, borderColor: '#eab308', borderWidth: 3, pointRadius: 0, tension: 0.35 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#ffffff' } } },
-          scales: {
-            x: {
-              ticks: {
-                color: '#a1a1aa',
-                maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
-                callback: function(value) {
-                  const raw = this.getLabelForValue(value);
-                  return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
-                }
-              },
-              grid: { color: '#27272a' }
-            },
-            y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
-          }
+
+  type: 'line',
+
+  data: {
+
+    labels,
+
+    datasets: [
+
+      {
+        label: 'DCA Strategy',
+        data: dcaBattleValues,
+        borderColor: '#ffffff',
+        borderWidth: 3,
+        pointRadius: 0,
+        tension: 0.35
+      },
+
+      {
+        label: 'Lump Sum Strategy',
+        data: lumpBattleValues,
+        borderColor: '#eab308',
+        borderWidth: 3,
+        pointRadius: 0,
+        tension: 0.35
+      }
+
+    ]
+  },
+
+  options: {
+
+    responsive: true,
+    maintainAspectRatio: false,
+
+    plugins: {
+      legend: {
+        labels: {
+          color: '#ffffff'
         }
-      });
+      }
+    },
+
+    scales: {
+
+      x: {
+
+        ticks: {
+
+          color: '#a1a1aa',
+
+          maxTicksLimit:
+            window.innerWidth < 768
+              ? 4
+              : 8,
+
+          callback: function(value, index) {
+
+            const raw =
+              labels[index];
+
+            if (!raw) return '';
+
+            return new Date(raw)
+              .toLocaleDateString(
+                undefined,
+                {
+                  year: 'numeric',
+                  month: 'short'
+                }
+              );
+          }
+        },
+
+        grid: {
+          color: '#27272a'
+        }
+      },
+
+      y: {
+
+        ticks: {
+          color: '#a1a1aa'
+        },
+
+        grid: {
+          color: '#27272a'
+        }
+      }
+    }
+  }
+});
     }
 
     function setDefault200Days() {
