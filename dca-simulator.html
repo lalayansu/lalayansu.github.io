@@ -135,192 +135,84 @@
       class="hidden bg-red-950 border border-red-800 text-red-300 rounded-3xl p-6 mb-8 text-center"
     ></div>
 
-    <!-- RESULTS -->
-    <div id="dcaResults" class="hidden">
+<!-- RESULTS WRAPPER (Hidden by default) -->
+<div id="dcaResults" class="hidden">
 
-      <!-- SUMMARY -->
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-          <p class="text-zinc-400 text-sm mb-2">
-            Total Invested
-          </p>
-
-          <p
-            id="totalInvested"
-            class="text-4xl font-bold"
-          >
-            $0
-          </p>
-        </div>
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-          <p class="text-zinc-400 text-sm mb-2">
-            Coins Accumulated
-          </p>
-
-          <p
-            id="totalCoins"
-            class="text-4xl font-bold"
-          >
-            0
-          </p>
-        </div>
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-          <p class="text-zinc-400 text-sm mb-2">
-            Portfolio Value
-          </p>
-
-          <p
-            id="valueToday"
-            class="text-4xl font-bold"
-          >
-            $0
-          </p>
-
-          <p
-            id="roiToday"
-            class="mt-3 text-sm"
-          ></p>
-        </div>
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-          <p class="text-zinc-400 text-sm mb-2">
-            Current Asset Price
-          </p>
-
-          <p
-            id="currentPrice"
-            class="text-4xl font-bold"
-          >
-            $0
-          </p>
-        </div>
-
-      </div>
-
-    <!-- BATTLE SECTION -->
-    <div id="battleSection" class="hidden mt-12">
-
-      <h2 class="text-3xl font-bold mb-2">
-        Lump Sum vs DCA Battle
-      </h2>
-
-      <p class="text-zinc-400 mb-8">
-        Same total capital • Same period • Real Binance data
-      </p>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
-          <h3 class="text-2xl font-semibold mb-4">
-            📊 DCA Strategy
-          </h3>
-
-          <p class="text-zinc-400 text-sm mb-2">
-            Final Portfolio Value
-          </p>
-
-          <p
-            id="battleDcaValue"
-            class="text-5xl font-bold mb-3"
-          >
-            $0
-          </p>
-
-          <p
-            id="battleDcaRoi"
-            class="text-sm"
-          ></p>
-
-        </div>
-
-        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-
-          <h3 class="text-2xl font-semibold mb-4">
-            💰 Lump Sum Strategy
-          </h3>
-
-          <p class="text-zinc-400 text-sm mb-2">
-            Final Portfolio Value
-          </p>
-
-          <p
-            id="battleLumpValue"
-            class="text-5xl font-bold mb-3"
-          >
-            $0
-          </p>
-
-          <p
-            id="battleLumpRoi"
-            class="text-sm"
-          ></p>
-
-        </div>
-
-      </div>
-
-      <!-- BATTLE CHART -->
-      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
-
-        <h2 class="text-xl md:text-2xl font-semibold mb-6">
-          Portfolio Growth Battle
-        </h2>
-
-        <div class="relative w-full h-[320px] md:h-[560px]">
-          <canvas id="battleChart"></canvas>
-        </div>
-
-      </div>
-
+  <!-- 1. SUMMARY STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-12">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+      <p class="text-zinc-400 text-sm mb-2">Total Invested</p>
+      <p id="totalInvested" class="text-4xl font-bold">$0</p>
     </div>
-
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+      <p class="text-zinc-400 text-sm mb-2">Coins Accumulated</p>
+      <p id="totalCoins" class="text-4xl font-bold">0</p>
+    </div>
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+      <p class="text-zinc-400 text-sm mb-2">Portfolio Value</p>
+      <p id="valueToday" class="text-4xl font-bold">$0</p>
+      <p id="roiToday" class="mt-3 text-sm"></p>
+    </div>
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+      <p class="text-zinc-400 text-sm mb-2">Current Asset Price</p>
+      <p id="currentPrice" class="text-4xl font-bold">$0</p>
+    </div>
   </div>
-      
-      <!-- DCA CHART -->
-      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-8">
 
-        <h2 class="text-xl md:text-2xl font-semibold mb-6">
-          Portfolio Growth (DCA)
-        </h2>
-
-        <div class="relative w-full h-[320px] md:h-[560px]">
-          <canvas id="dcaChart"></canvas>
-        </div>
-
+  <!-- 2. BATTLE SECTION (Appears between Summary and Chart when triggered) -->
+  <div id="battleSection" class="hidden mb-12">
+    <h2 class="text-3xl font-bold mb-2">Lump Sum vs DCA Battle</h2>
+    <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+        <h3 class="text-2xl font-semibold mb-4">📊 DCA Strategy</h3>
+        <p class="text-zinc-400 text-sm mb-2">Final Portfolio Value</p>
+        <p id="battleDcaValue" class="text-5xl font-bold mb-3">$0</p>
+        <p id="battleDcaRoi" class="text-sm"></p>
       </div>
-      
-      <!-- TABLE -->
-      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto">
-
-        <h2 class="text-2xl font-semibold mb-6">
-          Daily DCA History
-        </h2>
-
-        <table class="w-full min-w-[760px]">
-
-          <thead>
-            <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
-
-              <th class="text-left py-4">Date</th>
-              <th class="text-right py-4">Price</th>
-              <th class="text-right py-4">Bought</th>
-              <th class="text-right py-4">Total Coins</th>
-              <th class="text-right py-4">Portfolio Value</th>
-
-            </tr>
-          </thead>
-
-          <tbody id="tableBody"></tbody>
-
-        </table>
-
+      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+        <h3 class="text-2xl font-semibold mb-4">💰 Lump Sum Strategy</h3>
+        <p class="text-zinc-400 text-sm mb-2">Final Portfolio Value</p>
+        <p id="battleLumpValue" class="text-5xl font-bold mb-3">$0</p>
+        <p id="battleLumpRoi" class="text-sm"></p>
       </div>
-
     </div>
+
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
+      <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth Battle</h2>
+      <div class="relative w-full h-[320px] md:h-[560px]">
+        <canvas id="battleChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. DCA GROWTH CHART -->
+  <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
+    <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth (DCA)</h2>
+    <div class="relative w-full h-[320px] md:h-[560px]">
+      <canvas id="dcaChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 4. HISTORY TABLE -->
+  <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto mb-12">
+    <h2 class="text-2xl font-semibold mb-6">Daily DCA History</h2>
+    <table class="w-full min-w-[760px]">
+      <thead>
+        <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
+          <th class="text-left py-4">Date</th>
+          <th class="text-right py-4">Price</th>
+          <th class="text-right py-4">Bought</th>
+          <th class="text-right py-4">Total Coins</th>
+          <th class="text-right py-4">Portfolio Value</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div> <!-- End of dcaResults -->
 
   <script>
 
