@@ -200,19 +200,6 @@
 
       </div>
 
-      <!-- DCA CHART -->
-      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-8">
-
-        <h2 class="text-xl md:text-2xl font-semibold mb-6">
-          Portfolio Growth (DCA)
-        </h2>
-
-        <div class="relative w-full h-[320px] md:h-[560px]">
-          <canvas id="dcaChart"></canvas>
-        </div>
-
-      </div>
-
     <!-- BATTLE SECTION -->
     <div id="battleSection" class="hidden mt-12">
 
@@ -292,6 +279,19 @@
     </div>
 
   </div>
+      
+      <!-- DCA CHART -->
+      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-8">
+
+        <h2 class="text-xl md:text-2xl font-semibold mb-6">
+          Portfolio Growth (DCA)
+        </h2>
+
+        <div class="relative w-full h-[320px] md:h-[560px]">
+          <canvas id="dcaChart"></canvas>
+        </div>
+
+      </div>
       
       <!-- TABLE -->
       <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto">
@@ -733,10 +733,11 @@
 
       if (!lastRunData) return;
 
-      document
-        .getElementById('battleSection')
-        .classList.remove('hidden');
-
+const section = document.getElementById('battleSection');
+  section.classList.remove('hidden');
+  
+  section.scrollIntoView({ behavior: 'smooth' });
+      
       const {
         totalInvested,
         currentPrice,
