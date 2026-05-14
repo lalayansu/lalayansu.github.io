@@ -24,7 +24,6 @@
     <!-- CONTROLS -->
     <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 mb-8">
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        <!-- ASSET -->
         <div>
           <label class="block text-sm text-zinc-400 mb-2">Asset</label>
           <select id="asset" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
@@ -34,17 +33,14 @@
             <option value="DOGEUSDT">Dogecoin (DOGE)</option>
           </select>
         </div>
-        <!-- DAILY -->
         <div>
           <label class="block text-sm text-zinc-400 mb-2">Daily Investment ($)</label>
           <input id="dailyAmount" type="number" value="25" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
         </div>
-        <!-- START -->
         <div>
           <label class="block text-sm text-zinc-400 mb-2">Start Date</label>
           <input id="startDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
         </div>
-        <!-- END -->
         <div>
           <label class="block text-sm text-zinc-400 mb-2">End Date</label>
           <input id="endDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
@@ -96,7 +92,6 @@
         </div>
       </div>
 
-      <!-- DCA Chart -->
       <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-8">
         <h2 class="text-xl md:text-2xl font-semibold mb-4 md:mb-6">Portfolio Growth (DCA)</h2>
         <div class="relative w-full h-[320px] md:h-[560px]">
@@ -104,7 +99,6 @@
         </div>
       </div>
 
-      <!-- DCA Table -->
       <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto">
         <h2 class="text-2xl font-semibold mb-6">Daily DCA History</h2>
         <table class="w-full min-w-[760px]">
@@ -122,12 +116,11 @@
       </div>
     </div>
 
-    <!-- BATTLE RESULTS (appears only after clicking Lump Sum Battle) -->
+    <!-- BATTLE RESULTS -->
     <div id="battleSection" class="hidden mt-12">
       <h2 class="text-3xl font-bold mb-2">Lump Sum vs DCA Battle</h2>
       <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data</p>
 
-      <!-- Summary Comparison -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
           <p class="text-zinc-400 text-sm mb-2">Total Invested (both strategies)</p>
@@ -140,7 +133,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <!-- DCA Card -->
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
           <div class="flex items-center gap-3 mb-4">
             <span class="text-3xl">📊</span>
@@ -158,7 +150,6 @@
           </div>
         </div>
 
-        <!-- Lump Sum Card -->
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
           <div class="flex items-center gap-3 mb-4">
             <span class="text-3xl">💰</span>
@@ -177,21 +168,19 @@
         </div>
       </div>
 
-      <!-- Battle Chart -->
-      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-8">
+      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
         <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth Battle</h2>
         <div class="relative w-full h-[320px] md:h-[560px]">
           <canvas id="battleChart"></canvas>
         </div>
       </div>
     </div>
-
   </div>
 
   <script>
     let dcaChartInstance = null;
     let battleChartInstance = null;
-    let lastRunData = null;   // will store everything from the last DCA run
+    let lastRunData = null;
 
     document.getElementById('runBtn').addEventListener('click', runDCASimulation);
     document.getElementById('daysBtn').addEventListener('click', setDefault200Days);
@@ -243,7 +232,6 @@
         const liveJson = await liveResponse.json();
         const currentPrice = parseFloat(liveJson.price);
 
-        // === DCA CALCULATIONS ===
         let totalInvested = 0;
         let totalCoins = 0;
 
@@ -277,7 +265,6 @@
           `;
         });
 
-        // Holding period after DCA end
         futureData.forEach((candle) => {
           const closePrice = parseFloat(candle[4]);
           const date = new Date(candle[0]).toISOString().split('T')[0];
@@ -289,31 +276,53 @@
         const portfolioToday = totalCoins * currentPrice;
         const roi = ((portfolioToday - totalInvested) / totalInvested) * 100;
 
-        // Fill DCA summary
         document.getElementById('totalInvested').textContent = `$${totalInvested.toFixed(2)}`;
         document.getElementById('totalCoins').textContent = `${totalCoins.toFixed(6)} ${coinName}`;
         document.getElementById('valueToday').textContent = `$${portfolioToday.toFixed(2)}`;
         document.getElementById('currentPrice').textContent = `$${currentPrice.toLocaleString()}`;
         document.getElementById('roiToday').innerHTML = `<span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(2)}%</span>`;
 
-        // DCA Chart
-        const ctx = document.getElementById('dcaChart');
-        if (dcaChartInstance) dcaChartInstance.destroy();
-        dcaChartInstance = new Chart(ctx, {
+        // DCA Chart (fixed callback + safe destroy)
+        const dcaCtx = document.getElementById('dcaChart');
+        if (dcaChartInstance) {
+          dcaChartInstance.destroy();
+          dcaChartInstance = null;
+        }
+        dcaChartInstance = new Chart(dcaCtx, {
           type: 'line',
-          data: { labels, datasets: [{ label: 'DCA Portfolio', data: dcaValues, borderColor: '#ffffff', borderWidth: 3, pointRadius: 0, tension: 0.35 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#ffffff' } } }, scales: { x: { ticks: { color: '#a1a1aa', maxTicksLimit: window.innerWidth < 768 ? 4 : 8, callback: (v) => new Date(this.getLabelForValue(v)).toLocaleDateString(undefined, {year:'numeric', month:'short'}) }, grid: { color: '#27272a' } }, y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } } } }
+          data: {
+            labels,
+            datasets: [{ label: 'DCA Portfolio', data: dcaValues, borderColor: '#ffffff', borderWidth: 3, pointRadius: 0, tension: 0.35 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#ffffff' } } },
+            scales: {
+              x: {
+                ticks: {
+                  color: '#a1a1aa',
+                  maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
+                  callback: function(value) {
+                    const raw = this.getLabelForValue(value);
+                    return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
+                  }
+                },
+                grid: { color: '#27272a' }
+              },
+              y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
+            }
+          }
         });
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('dcaResults').classList.remove('hidden');
 
-        // === SAVE DATA FOR BATTLE ===
+        // Save data for battle
         lastRunData = {
           symbol, coinName, dailyAmount, totalInvested,
           data, futureData, currentPrice,
-          labels: labels.slice(),   // copy
-          dcaValues: dcaValues.slice()
+          labels: [...labels]
         };
 
         // Enable battle button
@@ -333,18 +342,16 @@
 
       document.getElementById('battleSection').classList.remove('hidden');
 
-      const { symbol, coinName, dailyAmount, totalInvested, data, futureData, currentPrice, labels: baseLabels } = lastRunData;
+      const { coinName, totalInvested, data, futureData, currentPrice, labels } = lastRunData;
 
       const startPrice = parseFloat(data[0][4]);
-      const lumpSumCoins = totalInvestment / startPrice;   // totalInvestment = dailyAmount * days
-      const dailyDCA = dailyAmount;   // already stored
+      const lumpSumCoins = totalInvested / startPrice;   // ← fixed
+      const dailyDCA = lastRunData.dailyAmount;
 
       let dcaCoins = 0;
-
       const dcaBattleValues = [];
       const lumpBattleValues = [];
 
-      // Re-calculate DCA + Lump Sum using the saved data
       data.forEach((candle) => {
         const closePrice = parseFloat(candle[4]);
         const bought = dailyDCA / closePrice;
@@ -366,7 +373,6 @@
       const roiDCA = ((finalDCA - totalInvested) / totalInvested) * 100;
       const roiLump = ((finalLump - totalInvested) / totalInvested) * 100;
 
-      // Fill battle summary
       document.getElementById('battleTotalInvested').textContent = `$${totalInvested.toFixed(2)}`;
       document.getElementById('battleCurrentPrice').textContent = `$${currentPrice.toLocaleString()}`;
 
@@ -380,13 +386,16 @@
       document.getElementById('battleLumpCoins').textContent = `${lumpSumCoins.toFixed(6)} ${coinName}`;
       document.getElementById('battleLumpDate').textContent = new Date(data[0][0]).toISOString().split('T')[0];
 
-      // Battle Chart
-      const ctx = document.getElementById('battleChart');
-      if (battleChartInstance) battleChartInstance.destroy();
-      battleChartInstance = new Chart(ctx, {
+      // Battle Chart (safe destroy + fixed callback)
+      const battleCtx = document.getElementById('battleChart');
+      if (battleChartInstance) {
+        battleChartInstance.destroy();
+        battleChartInstance = null;
+      }
+      battleChartInstance = new Chart(battleCtx, {
         type: 'line',
         data: {
-          labels: baseLabels,
+          labels,
           datasets: [
             { label: 'DCA Strategy', data: dcaBattleValues, borderColor: '#ffffff', borderWidth: 3, pointRadius: 0, tension: 0.35 },
             { label: 'Lump Sum Strategy', data: lumpBattleValues, borderColor: '#eab308', borderWidth: 3, pointRadius: 0, tension: 0.35 }
@@ -397,7 +406,17 @@
           maintainAspectRatio: false,
           plugins: { legend: { labels: { color: '#ffffff' } } },
           scales: {
-            x: { ticks: { color: '#a1a1aa', maxTicksLimit: window.innerWidth < 768 ? 4 : 8, callback: function(v) { return new Date(this.getLabelForValue(v)).toLocaleDateString(undefined, {year:'numeric', month:'short'}); } }, grid: { color: '#27272a' } },
+            x: {
+              ticks: {
+                color: '#a1a1aa',
+                maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
+                callback: function(value) {
+                  const raw = this.getLabelForValue(value);
+                  return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
+                }
+              },
+              grid: { color: '#27272a' }
+            },
             y: { ticks: { color: '#a1a1aa' }, grid: { color: '#27272a' } }
           }
         }
