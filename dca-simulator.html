@@ -159,7 +159,15 @@
     </div>
   </div>
 
-  <!-- 2. BATTLE SECTION (Appears between Summary and Chart when triggered) -->
+  <!-- 2. DCA GROWTH CHART -->
+  <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
+    <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth (DCA)</h2>
+    <div class="relative w-full h-[320px] md:h-[560px]">
+      <canvas id="dcaChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 3. BATTLE SECTION  -->
   <div id="battleSection" class="hidden mb-12">
     <h2 class="text-3xl font-bold mb-2">Lump Sum vs DCA Battle</h2>
     <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data</p>
@@ -186,15 +194,7 @@
       </div>
     </div>
   </div>
-
-  <!-- 3. DCA GROWTH CHART -->
-  <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
-    <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth (DCA)</h2>
-    <div class="relative w-full h-[320px] md:h-[560px]">
-      <canvas id="dcaChart"></canvas>
-    </div>
-  </div>
-
+  
   <!-- 4. HISTORY TABLE -->
   <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto mb-12">
     <h2 class="text-2xl font-semibold mb-6">Daily DCA History</h2>
