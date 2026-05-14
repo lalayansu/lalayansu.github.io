@@ -265,13 +265,35 @@
           `;
         });
 
-        futureData.forEach((candle) => {
-          const closePrice = parseFloat(candle[4]);
-          const date = new Date(candle[0]).toISOString().split('T')[0];
-          const portfolioValue = totalCoins * closePrice;
-          labels.push(date);
-          dcaValues.push(portfolioValue);
-        });
+        const holdValues = [];
+
+// Fill holdValues with nulls during DCA
+for (let i = 0; i < dcaValues.length; i++) {
+  holdValues.push(null);
+}
+
+// Future holding period
+futureData.forEach((candle) => {
+
+  const closePrice =
+    parseFloat(candle[4]);
+
+  const date =
+    new Date(candle[0])
+      .toISOString()
+      .split('T')[0];
+
+  const portfolioValue =
+    totalCoins * closePrice;
+
+  labels.push(date);
+
+  // stop white line
+  dcaValues.push(null);
+
+  // continue yellow line
+  holdValues.push(portfolioValue);
+});
 
         const portfolioToday = totalCoins * currentPrice;
         const roi = ((portfolioToday - totalInvested) / totalInvested) * 100;
@@ -294,14 +316,27 @@
 
   data: {
     labels,
-    datasets: [{
-      label: 'DCA Portfolio',
-      data: dcaValues,
-      borderColor: '#ffffff',
-      borderWidth: 3,
-      pointRadius: 0,
-      tension: 0.35
-    }]
+    datasets: [
+
+  {
+    label: 'DCA Period',
+    data: dcaValues,
+    borderColor: '#ffffff',
+    borderWidth: 3,
+    pointRadius: 0,
+    tension: 0.35
+  },
+
+  {
+    label: 'Holding After DCA',
+    data: holdValues,
+    borderColor: '#eab308',
+    borderWidth: 3,
+    pointRadius: 0,
+    tension: 0.35
+  }
+
+]
   },
 
   options: {
@@ -394,7 +429,14 @@
 
       document.getElementById('battleSection').classList.remove('hidden');
 
-      const { coinName, totalInvested, data, futureData, currentPrice, labels } = lastRunData;
+      const {
+  coinName,
+  totalInvested,
+  data,
+  futureData,
+  currentPrice
+} = lastRunData;
+      const battleLabels = [];
 
       const startPrice = parseFloat(data[0][4]);
       const lumpSumCoins = totalInvested / startPrice;   // ← fixed
@@ -405,19 +447,49 @@
       const lumpBattleValues = [];
 
       data.forEach((candle) => {
-        const closePrice = parseFloat(candle[4]);
-        const bought = dailyDCA / closePrice;
-        dcaCoins += bought;
 
-        dcaBattleValues.push(dcaCoins * closePrice);
-        lumpBattleValues.push(lumpSumCoins * closePrice);
-      });
+  const closePrice =
+    parseFloat(candle[4]);
+
+  const bought =
+    dailyDCA / closePrice;
+
+  dcaCoins += bought;
+
+  dcaBattleValues.push(
+    dcaCoins * closePrice
+  );
+
+  lumpBattleValues.push(
+    lumpSumCoins * closePrice
+  );
+
+  battleLabels.push(
+    new Date(candle[0])
+      .toISOString()
+      .split('T')[0]
+  );
+});
 
       futureData.forEach((candle) => {
-        const closePrice = parseFloat(candle[4]);
-        dcaBattleValues.push(dcaCoins * closePrice);
-        lumpBattleValues.push(lumpSumCoins * closePrice);
-      });
+
+  const closePrice =
+    parseFloat(candle[4]);
+
+  dcaBattleValues.push(
+    dcaCoins * closePrice
+  );
+
+  lumpBattleValues.push(
+    lumpSumCoins * closePrice
+  );
+
+  battleLabels.push(
+    new Date(candle[0])
+      .toISOString()
+      .split('T')[0]
+  );
+});
 
       const finalDCA = dcaCoins * currentPrice;
       const finalLump = lumpSumCoins * currentPrice;
@@ -450,7 +522,7 @@
 
   data: {
 
-    labels,
+    labels: battleLabels,
 
     datasets: [
 
