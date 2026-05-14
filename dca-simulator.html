@@ -93,22 +93,265 @@
 </div>
 
 <script>
-let dcaChartInstance=null,battleChartInstance=null,lastRunData=null;
-document.getElementById('runBtn').onclick=runDCASimulation;
-document.getElementById('daysBtn').onclick=setDefault200Days;
-document.getElementById('battleBtn').onclick=runLumpSumBattle;
-async function fetchAllKlines(symbol,startTime,endTime){let all=[],cur=startTime;while(cur<endTime){const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${cur}&endTime=${endTime}&limit=1000`);if(!r.ok)throw new Error(`HTTP ${r.status}`);const c=await r.json();if(!c.length)break;all.push(...c);cur=c[c.length-1][0]+86400000;if(c.length<1000)break;}return all;}
-async function runDCASimulation(){try{loading.classList.remove('hidden');dcaResults.classList.add('hidden');battleSection.classList.add('hidden');error.classList.add('hidden');const symbol=asset.value, coinName=asset.options[asset.selectedIndex].text.match(/\((.*?)\)/)[1], dailyAmount=parseFloat(const dailyAmount =
+let dcaChartInstance = null;
+let battleChartInstance = null;
+let lastRunData = null;
 
-  parseFloat(
+document.getElementById('runBtn').onclick = runDCASimulation;
+document.getElementById('daysBtn').onclick = setDefault200Days;
+document.getElementById('battleBtn').onclick = runLumpSumBattle;
 
-    document.getElementById('dailyAmount').value
+async function fetchAllKlines(symbol, startTime, endTime) {
+  let all = [];
+  let cur = startTime;
+  while (cur < endTime) {
+    const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1d&startTime=${cur}&endTime=${endTime}&limit=1000`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const c = await r.json();
+    if (!c.length) break;
+    all.push(...c);
+    cur = c[c.length - 1][0] + 86400000;
+    if (c.length < 1000) break;
+  }
+  return all;
+}
 
-  ) || 25;||dailyAmount.value)||25, startStr=startDate.value,endStr=endDate.value;if(!startStr||!endStr)return alert('Please select dates');const from=new Date(startStr).getTime(),to=new Date(endStr).getTime()+86400000;const data=await fetchAllKlines(symbol,from,to), futureData=await fetchAllKlines(symbol,to,Date.now()); const live=await (await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)).json(); const currentPrice=parseFloat(live.price); let totalInvested=0,totalCoins=0,labels=[],dcaValues=[],holdValues=[]; tableBody.innerHTML=''; data.forEach(c=>{const p=parseFloat(c[4]), d=new Date(c[0]).toISOString().split('T')[0], bought=dailyAmount/p; totalCoins+=bought; totalInvested+=dailyAmount; const v=totalCoins*p; labels.push(d); dcaValues.push(v); holdValues.push(null); tableBody.innerHTML += `<tr class='border-b border-zinc-800/50 text-sm'><td class='py-4'>${d}</td><td class='py-4 text-right'>$${p.toLocaleString()}</td><td class='py-4 text-right'>${bought.toFixed(6)} ${coinName}</td><td class='py-4 text-right'>${totalCoins.toFixed(6)}</td><td class='py-4 text-right'>$${v.toFixed(2)}</td></tr>`;}); if(dcaValues.length) holdValues[holdValues.length-1]=dcaValues[dcaValues.length-1]; futureData.forEach(c=>{const p=parseFloat(c[4]); labels.push(new Date(c[0]).toISOString().split('T')[0]); dcaValues.push(null); holdValues.push(totalCoins*p);}); const portfolioToday=totalCoins*currentPrice, roi=((portfolioToday-totalInvested)/totalInvested)*100; totalInvestedEl.textContent=`$${totalInvested.toFixed(2)}`; totalCoinsEl.textContent=`${totalCoins.toFixed(6)} ${coinName}`; valueToday.textContent=`$${portfolioToday.toFixed(2)}`; currentPriceEl.textContent=`$${currentPrice.toLocaleString()}`; roiToday.innerHTML=`<span class='${roi>=0?'text-green-400':'text-red-400'}'>${roi.toFixed(2)}%</span>`; if(dcaChartInstance)dcaChartInstance.destroy(); dcaChartInstance=new Chart(dcaChart,{type:'line',data:{labels,datasets:[{label:'DCA Period',data:dcaValues,borderColor:'#fff',borderWidth:3,pointRadius:0,tension:.35},{label:'Holding After DCA',data:holdValues,borderColor:'#eab308',borderWidth:3,pointRadius:0,tension:.35}]},options:baseOptions(labels)}); lastRunData={totalInvested,currentPrice,dailyAmount,data,futureData}; battleBtn.disabled=false; loading.classList.add('hidden'); dcaResults.classList.remove('hidden');}catch(e){loading.classList.add('hidden'); error.classList.remove('hidden'); error.innerHTML=`Could not fetch data.<br><br>${e.message}`;}}
-function runLumpSumBattle(){if(!lastRunData)return; battleSection.classList.remove('hidden'); battleSection.scrollIntoView({behavior:'smooth',block:'start'}); const {totalInvested,currentPrice,dailyAmount,data,futureData}=lastRunData; const labels=[], dca=[], lump=[]; let dcaCoins=0; const lumpCoins=totalInvested/parseFloat(data[0][4]); data.forEach(c=>{const p=parseFloat(c[4]); dcaCoins+=dailyAmount/p; dca.push(dcaCoins*p); lump.push(lumpCoins*p); labels.push(new Date(c[0]).toISOString().split('T')[0]);}); futureData.forEach(c=>{const p=parseFloat(c[4]); dca.push(dcaCoins*p); lump.push(lumpCoins*p); labels.push(new Date(c[0]).toISOString().split('T')[0]);}); const dcaR=((dcaCoins*currentPrice-totalInvested)/totalInvested)*100, lumpR=((lumpCoins*currentPrice-totalInvested)/totalInvested)*100; battleDcaValue.textContent=`$${(dcaCoins*currentPrice).toFixed(2)}`; battleLumpValue.textContent=`$${(lumpCoins*currentPrice).toFixed(2)}`; battleDcaRoi.innerHTML=`<span class='${dcaR>=0?'text-green-400':'text-red-400'}'>${dcaR.toFixed(2)}%</span>`; battleLumpRoi.innerHTML=`<span class='${lumpR>=0?'text-green-400':'text-red-400'}'>${lumpR.toFixed(2)}%</span>`; if(battleChartInstance)battleChartInstance.destroy(); battleChartInstance=new Chart(battleChart,{type:'line',data:{labels,datasets:[{label:'DCA Strategy',data:dca,borderColor:'#fff',borderWidth:3,pointRadius:0,tension:.35},{label:'Lump Sum Strategy',data:lump,borderColor:'#eab308',borderWidth:3,pointRadius:0,tension:.35}]},options:baseOptions(labels)});}
-function baseOptions(labels){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#fff'}}},scales:{x:{ticks:{color:'#a1a1aa',maxTicksLimit:window.innerWidth<768?4:8,callback:(v,i)=>new Date(labels[i]).toLocaleDateString(undefined,{year:'numeric',month:'short'})},grid:{color:'#27272a'}},y:{ticks:{color:'#a1a1aa'},grid:{color:'#27272a'}}}}}
-function setDefault200Days(){const end=new Date(),start=new Date();start.setDate(start.getDate()-200); startDate.value=start.toISOString().split('T')[0]; endDate.value=end.toISOString().split('T')[0]; runDCASimulation();}
-window.onload=()=>{window.asset=document.getElementById('asset');window.dailyAmountEl=document.getElementById('dailyAmount');window.startDate=document.getElementById('startDate');window.endDate=document.getElementById('endDate');window.loading=document.getElementById('loading');window.dcaResults=document.getElementById('dcaResults');window.battleSection=document.getElementById('battleSection');window.error=document.getElementById('error');window.tableBody=document.getElementById('tableBody');window.totalInvestedEl=document.getElementById('totalInvested');window.totalCoinsEl=document.getElementById('totalCoins');window.valueToday=document.getElementById('valueToday');window.currentPriceEl=document.getElementById('currentPrice');window.roiToday=document.getElementById('roiToday'); const t=new Date(), s=new Date(); s.setDate(s.getDate()-200); endDate.value=t.toISOString().split('T')[0]; startDate.value=s.toISOString().split('T')[0];};
+async function runDCASimulation() {
+  try {
+    loading.classList.remove('hidden');
+    dcaResults.classList.add('hidden');
+    battleSection.classList.add('hidden');
+    error.classList.add('hidden');
+
+    const symbol = asset.value;
+    const coinName = asset.options[asset.selectedIndex].text.match(/\((.*?)\)/)[1];
+    const dailyAmount = parseFloat(dailyAmountEl.value) || 25;
+    const startStr = startDate.value;
+    const endStr = endDate.value;
+
+    if (!startStr || !endStr) return alert('Please select dates');
+
+    const from = new Date(startStr).getTime();
+    const to = new Date(endStr).getTime() + 86400000;
+
+    const data = await fetchAllKlines(symbol, from, to);
+    const futureData = await fetchAllKlines(symbol, to, Date.now());
+
+    const live = await (await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)).json();
+    const currentPrice = parseFloat(live.price);
+
+    let totalInvested = 0;
+    let totalCoins = 0;
+    let labels = [];
+    let dcaValues = [];
+    let holdValues = [];
+
+    tableBody.innerHTML = '';
+
+    data.forEach(c => {
+      const p = parseFloat(c[4]);
+      const d = new Date(c[0]).toISOString().split('T')[0];
+      const bought = dailyAmount / p;
+
+      totalCoins += bought;
+      totalInvested += dailyAmount;
+      const v = totalCoins * p;
+
+      labels.push(d);
+      dcaValues.push(v);
+      holdValues.push(null);
+
+      tableBody.innerHTML += `
+        <tr class="border-b border-zinc-800/50 text-sm">
+          <td class="py-4">${d}</td>
+          <td class="py-4 text-right">$${p.toLocaleString()}</td>
+          <td class="py-4 text-right">${bought.toFixed(6)} ${coinName}</td>
+          <td class="py-4 text-right">${totalCoins.toFixed(6)}</td>
+          <td class="py-4 text-right">$${v.toFixed(2)}</td>
+        </tr>`;
+    });
+
+    if (dcaValues.length) {
+      holdValues[holdValues.length - 1] = dcaValues[dcaValues.length - 1];
+    }
+
+    futureData.forEach(c => {
+      const p = parseFloat(c[4]);
+      labels.push(new Date(c[0]).toISOString().split('T')[0]);
+      dcaValues.push(null);
+      holdValues.push(totalCoins * p);
+    });
+
+    const portfolioToday = totalCoins * currentPrice;
+    const roi = ((portfolioToday - totalInvested) / totalInvested) * 100;
+
+    totalInvestedEl.textContent = `$${totalInvested.toFixed(2)}`;
+    totalCoinsEl.textContent = `${totalCoins.toFixed(6)} ${coinName}`;
+    valueToday.textContent = `$${portfolioToday.toFixed(2)}`;
+    currentPriceEl.textContent = `$${currentPrice.toLocaleString()}`;
+    roiToday.innerHTML = `<span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(2)}%</span>`;
+
+    if (dcaChartInstance) dcaChartInstance.destroy();
+    dcaChartInstance = new Chart(dcaChart, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'DCA Period',
+            data: dcaValues,
+            borderColor: '#fff',
+            borderWidth: 3,
+            pointRadius: 0,
+            tension: 0.35
+          },
+          {
+            label: 'Holding After DCA',
+            data: holdValues,
+            borderColor: '#eab308',
+            borderWidth: 3,
+            pointRadius: 0,
+            tension: 0.35
+          }
+        ]
+      },
+      options: baseOptions(labels)
+    });
+
+    lastRunData = { totalInvested, currentPrice, dailyAmount, data, futureData };
+    battleBtn.disabled = false;
+
+    loading.classList.add('hidden');
+    dcaResults.classList.remove('hidden');
+  } catch (e) {
+    loading.classList.add('hidden');
+    error.classList.remove('hidden');
+    error.innerHTML = `Could not fetch data.<br><br>${e.message}`;
+  }
+}
+
+function runLumpSumBattle() {
+  if (!lastRunData) return;
+
+  battleSection.classList.remove('hidden');
+  battleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const { totalInvested, currentPrice, dailyAmount, data, futureData } = lastRunData;
+
+  const labels = [];
+  const dca = [];
+  const lump = [];
+  let dcaCoins = 0;
+  const lumpCoins = totalInvested / parseFloat(data[0][4]);
+
+  data.forEach(c => {
+    const p = parseFloat(c[4]);
+    dcaCoins += dailyAmount / p;
+    dca.push(dcaCoins * p);
+    lump.push(lumpCoins * p);
+    labels.push(new Date(c[0]).toISOString().split('T')[0]);
+  });
+
+  futureData.forEach(c => {
+    const p = parseFloat(c[4]);
+    dca.push(dcaCoins * p);
+    lump.push(lumpCoins * p);
+    labels.push(new Date(c[0]).toISOString().split('T')[0]);
+  });
+
+  const dcaR = ((dcaCoins * currentPrice - totalInvested) / totalInvested) * 100;
+  const lumpR = ((lumpCoins * currentPrice - totalInvested) / totalInvested) * 100;
+
+  battleDcaValue.textContent = `$${(dcaCoins * currentPrice).toFixed(2)}`;
+  battleLumpValue.textContent = `$${(lumpCoins * currentPrice).toFixed(2)}`;
+  battleDcaRoi.innerHTML = `<span class="${dcaR >= 0 ? 'text-green-400' : 'text-red-400'}">${dcaR.toFixed(2)}%</span>`;
+  battleLumpRoi.innerHTML = `<span class="${lumpR >= 0 ? 'text-green-400' : 'text-red-400'}">${lumpR.toFixed(2)}%</span>`;
+
+  if (battleChartInstance) battleChartInstance.destroy();
+  battleChartInstance = new Chart(battleChart, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'DCA Strategy',
+          data: dca,
+          borderColor: '#fff',
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.35
+        },
+        {
+          label: 'Lump Sum Strategy',
+          data: lump,
+          borderColor: '#eab308',
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.35
+        }
+      ]
+    },
+    options: baseOptions(labels)
+  });
+}
+
+function baseOptions(labels) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#fff' }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#a1a1aa',
+          maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
+          callback: (v, i) => new Date(labels[i]).toLocaleDateString(undefined, { year: 'numeric', month: 'short' })
+        },
+        grid: { color: '#27272a' }
+      },
+      y: {
+        ticks: { color: '#a1a1aa' },
+        grid: { color: '#27272a' }
+      }
+    }
+  };
+}
+
+function setDefault200Days() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 200);
+  startDate.value = start.toISOString().split('T')[0];
+  endDate.value = end.toISOString().split('T')[0];
+  runDCASimulation();
+}
+
+window.onload = () => {
+  window.asset = document.getElementById('asset');
+  window.dailyAmountEl = document.getElementById('dailyAmount');
+  window.startDate = document.getElementById('startDate');
+  window.endDate = document.getElementById('endDate');
+  window.loading = document.getElementById('loading');
+  window.dcaResults = document.getElementById('dcaResults');
+  window.battleSection = document.getElementById('battleSection');
+  window.error = document.getElementById('error');
+  window.tableBody = document.getElementById('tableBody');
+  window.totalInvestedEl = document.getElementById('totalInvested');
+  window.totalCoinsEl = document.getElementById('totalCoins');
+  window.valueToday = document.getElementById('valueToday');
+  window.currentPriceEl = document.getElementById('currentPrice');
+  window.roiToday = document.getElementById('roiToday');
+
+  const t = new Date();
+  const s = new Date();
+  s.setDate(s.getDate() - 200);
+  endDate.value = t.toISOString().split('T')[0];
+  startDate.value = s.toISOString().split('T')[0];
+};
 </script>
 
 <div class="max-w-7xl mx-auto px-5 py-10">
