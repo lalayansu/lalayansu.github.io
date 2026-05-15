@@ -24,9 +24,10 @@
         Simulate Dollar Cost Averaging • Real Binance data
       </p>
     </div>
+
     <!-- CONTROLS -->
     <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
         <div>
           <label class="block text-sm text-zinc-400 mb-2">
             Asset
@@ -41,17 +42,33 @@
             <option value="DOGEUSDT">Dogecoin (DOGE)</option>
           </select>
         </div>
+        
         <div>
           <label class="block text-sm text-zinc-400 mb-2">
-            Daily Investment ($)
+            Frequency
+          </label>
+          <select
+            id="frequency"
+            class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2">
+            Investment Amount ($)
           </label>
           <input
-            id="dailyAmount"
+            id="investmentAmount"
             type="number"
             value="25"
             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
           />
         </div>
+
         <div>
           <label class="block text-sm text-zinc-400 mb-2">
             Start Date
@@ -62,6 +79,7 @@
             class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white"
           />
         </div>
+
         <div>
           <label class="block text-sm text-zinc-400 mb-2">
             End Date
@@ -73,6 +91,7 @@
           />
         </div>
       </div>
+
       <!-- BUTTONS -->
       <div class="flex flex-col md:flex-row gap-4 mt-8">
         <button
@@ -96,6 +115,7 @@
         </button>
       </div>
     </div>
+
     <!-- LOADING -->
     <div
       id="loading"
@@ -103,11 +123,13 @@
     >
       Fetching market data...
     </div>
+
     <!-- ERROR -->
     <div
       id="error"
       class="hidden bg-red-950 border border-red-800 text-red-300 rounded-3xl p-6 mb-8 text-center"
     ></div>
+
 <!-- RESULTS WRAPPER (Hidden by default) -->
 <div id="dcaResults" class="hidden">
   <!-- 1. SUMMARY STATS -->
@@ -130,6 +152,7 @@
       <p id="currentPrice" class="text-4xl font-bold">$0</p>
     </div>
   </div>
+
   <!-- 2. DCA GROWTH CHART -->
   <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
     <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth (DCA)</h2>
@@ -137,6 +160,7 @@
       <canvas id="dcaChart"></canvas>
     </div>
   </div>
+
   <!-- 3. BATTLE SECTION  -->
   <div id="battleSection" class="hidden mb-12">
     <h2 class="text-3xl font-bold mb-2">Lump Sum vs DCA Battle</h2>
@@ -167,8 +191,8 @@
   <!-- 4. HISTORY TABLE -->
   <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto mb-12">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-semibold">Daily DCA History</h2>
-      <p class="text-zinc-500 text-sm">Showing latest 300 rows</p>
+      <h2 class="text-2xl font-semibold">DCA Investment History</h2>
+      <p class="text-zinc-500 text-sm">Showing latest 300 buys</p>
     </div>
     <table class="w-full min-w-[760px]">
       <thead>
@@ -184,22 +208,18 @@
     </table>
   </div>
 </div> <!-- End of dcaResults -->
+
   <script>
     let dcaChartInstance = null;
     let battleChartInstance = null;
     let lastRunData = null;
     const MAX_TABLE_ROWS = 300;
-    const numberFormatter =
-      new Intl.NumberFormat();
-    document
-      .getElementById('runBtn')
-      .addEventListener('click', runDCASimulation);
-    document
-      .getElementById('daysBtn')
-      .addEventListener('click', setDefault200Days);
-    document
-      .getElementById('battleBtn')
-      .addEventListener('click', runLumpSumBattle);
+    const numberFormatter = new Intl.NumberFormat();
+
+    document.getElementById('runBtn').addEventListener('click', runDCASimulation);
+    document.getElementById('daysBtn').addEventListener('click', setDefault200Days);
+    document.getElementById('battleBtn').addEventListener('click', runLumpSumBattle);
+
     async function fetchAllKlines(symbol, startTime, endTime) {
       let allData = [];
       let currentStart = startTime;
@@ -211,187 +231,163 @@
           `&startTime=${currentStart}` +
           `&endTime=${endTime}` +
           `&limit=1000`;
-        const response =
-          await fetch(url);
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        const chunk =
-          await response.json();
+        const chunk = await response.json();
         if (!chunk.length) {
           break;
         }
         allData.push(...chunk);
-        currentStart =
-          chunk[chunk.length - 1][0] + 86400000;
+        currentStart = chunk[chunk.length - 1][0] + 86400000;
         if (chunk.length < 1000) {
           break;
         }
       }
       return allData;
     }
+
     async function runDCASimulation() {
       try {
-        document
-          .getElementById('loading')
-          .classList.remove('hidden');
-        document
-          .getElementById('dcaResults')
-          .classList.add('hidden');
-        document
-          .getElementById('battleSection')
-          .classList.add('hidden');
-        document
-          .getElementById('error')
-          .classList.add('hidden');
-        await new Promise(resolve =>
-          requestAnimationFrame(resolve)
-        );
-        const symbol =
-          document.getElementById('asset').value;
-        const assetLabel =
-          document.getElementById('asset')
-            .options[
-              document.getElementById('asset').selectedIndex
-            ].text;
-        const coinName =
-          assetLabel.match(/\((.*?)\)/)[1];
-        const dailyAmount =
-          parseFloat(
-            document.getElementById('dailyAmount').value
-          ) || 25;
-        const startStr =
-          document.getElementById('startDate').value;
-        const endStr =
-          document.getElementById('endDate').value;
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('dcaResults').classList.add('hidden');
+        document.getElementById('battleSection').classList.add('hidden');
+        document.getElementById('error').classList.add('hidden');
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        const symbol = document.getElementById('asset').value;
+        const assetLabel = document.getElementById('asset').options[document.getElementById('asset').selectedIndex].text;
+        const coinName = assetLabel.match(/\((.*?)\)/)[1];
+        
+        const frequency = document.getElementById('frequency').value;
+        const investAmount = parseFloat(document.getElementById('investmentAmount').value) || 25;
+        
+        const startStr = document.getElementById('startDate').value;
+        const endStr = document.getElementById('endDate').value;
+
         if (!startStr || !endStr) {
           alert("Please select dates");
+          document.getElementById('loading').classList.add('hidden');
           return;
         }
-        const from =
-          new Date(startStr).getTime();
-        const to =
-          new Date(endStr).getTime() + 86400000;
-        const [
-          data,
-          futureData,
-          liveResponse
-        ] = await Promise.all([
+
+        const from = new Date(startStr).getTime();
+        const to = new Date(endStr).getTime() + 86400000;
+
+        const [data, futureData, liveResponse] = await Promise.all([
           fetchAllKlines(symbol, from, to),
           fetchAllKlines(symbol, to, Date.now()),
-          fetch(
-            `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`
-          )
+          fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`)
         ]);
-        const liveJson =
-          await liveResponse.json();
-        const currentPrice =
-          parseFloat(liveJson.price);
+
+        const liveJson = await liveResponse.json();
+        const currentPrice = parseFloat(liveJson.price);
+
         let totalInvested = 0;
         let totalCoins = 0;
+        let lastBuyMonth = -1;
+
         const labels = [];
         const dcaValues = [];
         const holdValues = [];
-        const tableBody =
-          document.getElementById('tableBody');
-        tableBody.innerHTML = '';
-        const visibleData =
-          data.length > MAX_TABLE_ROWS
-            ? data.slice(-MAX_TABLE_ROWS)
-            : data;
-        let rows = '';
+        const tableRowsData = [];
+
         // DCA PERIOD
         data.forEach((candle, index) => {
-          const timestamp =
-            candle[0];
-          const closePrice =
-            parseFloat(candle[4]);
-          const date =
-            new Date(timestamp)
-              .toISOString()
-              .split('T')[0];
-          const bought =
-            dailyAmount / closePrice;
-          totalCoins += bought;
-          totalInvested += dailyAmount;
-          const portfolioValue =
-            totalCoins * closePrice;
-          labels.push(date);
+          const timestamp = candle[0];
+          const closePrice = parseFloat(candle[4]);
+          const dateObj = new Date(timestamp);
+          const dateStr = dateObj.toISOString().split('T')[0];
+          const currentMonth = dateObj.getMonth();
+
+          // Frequency Logic
+          let shouldBuy = false;
+          if (frequency === 'daily') {
+            shouldBuy = true;
+          } else if (frequency === 'weekly') {
+            // Buys on Day 1, and every 7th day after
+            shouldBuy = (index % 7 === 0);
+          } else if (frequency === 'monthly') {
+            // Buys on Day 1, and the first candle of each new month
+            if (index === 0 || currentMonth !== lastBuyMonth) {
+              shouldBuy = true;
+              lastBuyMonth = currentMonth;
+            }
+          }
+
+          if (shouldBuy) {
+            const bought = investAmount / closePrice;
+            totalCoins += bought;
+            totalInvested += investAmount;
+            
+            // Store for table
+            tableRowsData.push({
+              date: dateStr,
+              price: closePrice,
+              bought: bought,
+              totalCoins: totalCoins,
+              portfolioValue: totalCoins * closePrice
+            });
+          }
+
+          // Track Portfolio value for the chart regardless of whether we bought today
+          const portfolioValue = totalCoins * closePrice;
+          labels.push(dateStr);
           dcaValues.push(portfolioValue);
           holdValues.push(null);
-          // ONLY RENDER LAST 300 ROWS
-          if (index >= data.length - visibleData.length) {
-            rows += `
-              <tr class="border-b border-zinc-800/50 text-sm">
-                <td class="py-4">${date}</td>
-                <td class="py-4 text-right">
-                  $${numberFormatter.format(closePrice.toFixed(2))}
-                </td>
-                <td class="py-4 text-right">
-                  ${bought.toFixed(6)} ${coinName}
-                </td>
-                <td class="py-4 text-right">
-                  ${totalCoins.toFixed(6)}
-                </td>
-                <td class="py-4 text-right">
-                  $${numberFormatter.format(portfolioValue.toFixed(2))}
-                </td>
-              </tr>
-            `;
-          }
+        });
+
+        // Generate table HTML (only show actual buy events)
+        const tableBody = document.getElementById('tableBody');
+        let rows = '';
+        const visibleTableData = tableRowsData.slice(-MAX_TABLE_ROWS);
+        visibleTableData.forEach(row => {
+          rows += `
+            <tr class="border-b border-zinc-800/50 text-sm">
+              <td class="py-4">${row.date}</td>
+              <td class="py-4 text-right">$${numberFormatter.format(row.price.toFixed(2))}</td>
+              <td class="py-4 text-right">${row.bought.toFixed(6)} ${coinName}</td>
+              <td class="py-4 text-right">${row.totalCoins.toFixed(6)}</td>
+              <td class="py-4 text-right">$${numberFormatter.format(row.portfolioValue.toFixed(2))}</td>
+            </tr>
+          `;
         });
         tableBody.innerHTML = rows;
+
         // CONNECT YELLOW LINE TO WHITE LINE
         if (dcaValues.length > 0) {
-          holdValues[holdValues.length - 1] =
-            dcaValues[dcaValues.length - 1];
+          holdValues[holdValues.length - 1] = dcaValues[dcaValues.length - 1];
         }
+
         // HOLD PERIOD
         futureData.forEach((candle) => {
-          const closePrice =
-            parseFloat(candle[4]);
-          const date =
-            new Date(candle[0])
-              .toISOString()
-              .split('T')[0];
-          const portfolioValue =
-            totalCoins * closePrice;
+          const closePrice = parseFloat(candle[4]);
+          const date = new Date(candle[0]).toISOString().split('T')[0];
+          const portfolioValue = totalCoins * closePrice;
+
           labels.push(date);
           dcaValues.push(null);
           holdValues.push(portfolioValue);
         });
-        const portfolioToday =
-          totalCoins * currentPrice;
-        const roi =
-          ((portfolioToday - totalInvested) /
-            totalInvested) * 100;
-        document.getElementById('totalInvested')
-          .textContent =
-          `$${numberFormatter.format(totalInvested.toFixed(2))}`;
-        document.getElementById('totalCoins')
-          .textContent =
-          `${totalCoins.toFixed(6)} ${coinName}`;
-        document.getElementById('valueToday')
-          .textContent =
-          `$${numberFormatter.format(portfolioToday.toFixed(2))}`;
-        document.getElementById('currentPrice')
-          .textContent =
-          `$${numberFormatter.format(currentPrice.toFixed(2))}`;
-        document.getElementById('roiToday')
-          .innerHTML =
-          `<span class="${
-            roi >= 0
-              ? 'text-green-400'
-              : 'text-red-400'
-          }">
-            ${roi.toFixed(2)}%
-          </span>`;
+
+        const portfolioToday = totalCoins * currentPrice;
+        const roi = totalInvested > 0 ? ((portfolioToday - totalInvested) / totalInvested) * 100 : 0;
+
+        document.getElementById('totalInvested').textContent = `$${numberFormatter.format(totalInvested.toFixed(2))}`;
+        document.getElementById('totalCoins').textContent = `${totalCoins.toFixed(6)} ${coinName}`;
+        document.getElementById('valueToday').textContent = `$${numberFormatter.format(portfolioToday.toFixed(2))}`;
+        document.getElementById('currentPrice').textContent = `$${numberFormatter.format(currentPrice.toFixed(2))}`;
+        
+        document.getElementById('roiToday').innerHTML = 
+          `<span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(2)}%</span>`;
+
         // DESTROY OLD CHART
         if (dcaChartInstance) {
           dcaChartInstance.destroy();
         }
-        const dcaCtx =
-          document.getElementById('dcaChart');
+        
+        const dcaCtx = document.getElementById('dcaChart');
         dcaChartInstance = new Chart(dcaCtx, {
           type: 'line',
           data: {
@@ -419,187 +415,137 @@
             animation: false,
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-              intersect: false,
-              mode: 'index'
-            },
+            interaction: { intersect: false, mode: 'index' },
             plugins: {
-              decimation: {
-                enabled: true,
-                algorithm: 'lttb',
-                samples: 300
-              },
-              legend: {
-                labels: {
-                  color: '#ffffff'
-                }
-              }
+              decimation: { enabled: true, algorithm: 'lttb', samples: 300 },
+              legend: { labels: { color: '#ffffff' } }
             },
             scales: {
               x: {
                 ticks: {
                   color: '#a1a1aa',
-                  maxTicksLimit:
-                    window.innerWidth < 768
-                      ? 4
-                      : 8,
+                  maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
                   callback: function(value, index) {
-                    const raw =
-                      labels[index];
+                    const raw = labels[index];
                     if (!raw) return '';
-                    return new Date(raw)
-                      .toLocaleDateString(
-                        undefined,
-                        {
-                          year: 'numeric',
-                          month: 'short'
-                        }
-                      );
+                    return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
                   }
                 },
-                grid: {
-                  color: '#27272a'
-                }
+                grid: { color: '#27272a' }
               },
               y: {
-                ticks: {
-                  color: '#a1a1aa'
-                },
-                grid: {
-                  color: '#27272a'
-                }
+                ticks: { color: '#a1a1aa' },
+                grid: { color: '#27272a' }
               }
             }
           }
         });
+
         // SAVE FOR BATTLE
         lastRunData = {
           totalInvested,
           currentPrice,
-          dailyAmount,
+          investAmount,
+          frequency,
           data,
           futureData,
           coinName
         };
+
         // ENABLE BUTTON
-        document
-          .getElementById('battleBtn')
-          .disabled = false;
-        document
-          .getElementById('loading')
-          .classList.add('hidden');
-        document
-          .getElementById('dcaResults')
-          .classList.remove('hidden');
+        document.getElementById('battleBtn').disabled = false;
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('dcaResults').classList.remove('hidden');
+
       } catch (error) {
         console.error(error);
-        document
-          .getElementById('loading')
-          .classList.add('hidden');
-        document
-          .getElementById('error')
-          .classList.remove('hidden');
-        document
-          .getElementById('error')
-          .innerHTML =
-          `Could not fetch data.<br><br>${error.message}`;
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error').classList.remove('hidden');
+        document.getElementById('error').innerHTML = `Could not fetch data.<br><br>${error.message}`;
       }
     }
+
     function runLumpSumBattle() {
       if (!lastRunData) return;
+
       const section = document.getElementById('battleSection');
       section.classList.remove('hidden');
-      
       section.scrollIntoView({ behavior: 'smooth' });
           
       const {
         totalInvested,
         currentPrice,
-        dailyAmount,
+        investAmount,
+        frequency,
         data,
         futureData
       } = lastRunData;
+
       const battleLabels = [];
       const dcaBattleValues = [];
       const lumpBattleValues = [];
+      
       let dcaCoins = 0;
-      const startPrice =
-        parseFloat(data[0][4]);
-      const lumpCoins =
-        totalInvested / startPrice;
+      let lastBuyMonth = -1;
+
+      const startPrice = parseFloat(data[0][4]);
+      const lumpCoins = totalInvested / startPrice;
+
       // DCA PERIOD
-      data.forEach((candle) => {
-        const closePrice =
-          parseFloat(candle[4]);
-        dcaCoins +=
-          dailyAmount / closePrice;
-        dcaBattleValues.push(
-          dcaCoins * closePrice
-        );
-        lumpBattleValues.push(
-          lumpCoins * closePrice
-        );
-        battleLabels.push(
-          new Date(candle[0])
-            .toISOString()
-            .split('T')[0]
-        );
+      data.forEach((candle, index) => {
+        const timestamp = candle[0];
+        const closePrice = parseFloat(candle[4]);
+        const currentMonth = new Date(timestamp).getMonth();
+
+        // Replicate frequency logic for the battle chart
+        let shouldBuy = false;
+        if (frequency === 'daily') {
+          shouldBuy = true;
+        } else if (frequency === 'weekly') {
+          shouldBuy = (index % 7 === 0);
+        } else if (frequency === 'monthly') {
+          if (index === 0 || currentMonth !== lastBuyMonth) {
+            shouldBuy = true;
+            lastBuyMonth = currentMonth;
+          }
+        }
+
+        if (shouldBuy) {
+          dcaCoins += investAmount / closePrice;
+        }
+
+        dcaBattleValues.push(dcaCoins * closePrice);
+        lumpBattleValues.push(lumpCoins * closePrice);
+        battleLabels.push(new Date(timestamp).toISOString().split('T')[0]);
       });
+
       // HOLD PERIOD
       futureData.forEach((candle) => {
-        const closePrice =
-          parseFloat(candle[4]);
-        dcaBattleValues.push(
-          dcaCoins * closePrice
-        );
-        lumpBattleValues.push(
-          lumpCoins * closePrice
-        );
-        battleLabels.push(
-          new Date(candle[0])
-            .toISOString()
-            .split('T')[0]
-        );
+        const closePrice = parseFloat(candle[4]);
+        dcaBattleValues.push(dcaCoins * closePrice);
+        lumpBattleValues.push(lumpCoins * closePrice);
+        battleLabels.push(new Date(candle[0]).toISOString().split('T')[0]);
       });
-      const finalDCA =
-        dcaCoins * currentPrice;
-      const finalLump =
-        lumpCoins * currentPrice;
-      const dcaROI =
-        ((finalDCA - totalInvested) /
-          totalInvested) * 100;
-      const lumpROI =
-        ((finalLump - totalInvested) /
-          totalInvested) * 100;
-      document.getElementById('battleDcaValue')
-        .textContent =
-        `$${numberFormatter.format(finalDCA.toFixed(2))}`;
-      document.getElementById('battleLumpValue')
-        .textContent =
-        `$${numberFormatter.format(finalLump.toFixed(2))}`;
-      document.getElementById('battleDcaRoi')
-        .innerHTML =
-        `<span class="${
-          dcaROI >= 0
-            ? 'text-green-400'
-            : 'text-red-400'
-        }">
-          ${dcaROI.toFixed(2)}%
-        </span>`;
-      document.getElementById('battleLumpRoi')
-        .innerHTML =
-        `<span class="${
-          lumpROI >= 0
-            ? 'text-green-400'
-            : 'text-red-400'
-        }">
-          ${lumpROI.toFixed(2)}%
-        </span>`;
+
+      const finalDCA = dcaCoins * currentPrice;
+      const finalLump = lumpCoins * currentPrice;
+      const dcaROI = ((finalDCA - totalInvested) / totalInvested) * 100;
+      const lumpROI = ((finalLump - totalInvested) / totalInvested) * 100;
+
+      document.getElementById('battleDcaValue').textContent = `$${numberFormatter.format(finalDCA.toFixed(2))}`;
+      document.getElementById('battleLumpValue').textContent = `$${numberFormatter.format(finalLump.toFixed(2))}`;
+      
+      document.getElementById('battleDcaRoi').innerHTML = 
+        `<span class="${dcaROI >= 0 ? 'text-green-400' : 'text-red-400'}">${dcaROI.toFixed(2)}%</span>`;
+      
+      document.getElementById('battleLumpRoi').innerHTML = 
+        `<span class="${lumpROI >= 0 ? 'text-green-400' : 'text-red-400'}">${lumpROI.toFixed(2)}%</span>`;
+
       if (battleChartInstance) {
         battleChartInstance.destroy();
       }
-      const battleCtx =
-        document.getElementById('battleChart');
+      
+      const battleCtx = document.getElementById('battleChart');
       battleChartInstance = new Chart(battleCtx, {
         type: 'line',
         data: {
@@ -628,92 +574,54 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            decimation: {
-              enabled: true,
-              algorithm: 'lttb',
-              samples: 300
-            },
-            legend: {
-              labels: {
-                color: '#ffffff'
-              }
-            }
+            decimation: { enabled: true, algorithm: 'lttb', samples: 300 },
+            legend: { labels: { color: '#ffffff' } }
           },
           scales: {
             x: {
               ticks: {
                 color: '#a1a1aa',
-                maxTicksLimit:
-                  window.innerWidth < 768
-                    ? 4
-                    : 8,
+                maxTicksLimit: window.innerWidth < 768 ? 4 : 8,
                 callback: function(value, index) {
-                  const raw =
-                    battleLabels[index];
+                  const raw = battleLabels[index];
                   if (!raw) return '';
-                  return new Date(raw)
-                    .toLocaleDateString(
-                      undefined,
-                      {
-                        year: 'numeric',
-                        month: 'short'
-                      }
-                    );
+                  return new Date(raw).toLocaleDateString(undefined, { year: 'numeric', month: 'short' });
                 }
               },
-              grid: {
-                color: '#27272a'
-              }
+              grid: { color: '#27272a' }
             },
             y: {
-              ticks: {
-                color: '#a1a1aa'
-              },
-              grid: {
-                color: '#27272a'
-              }
+              ticks: { color: '#a1a1aa' },
+              grid: { color: '#27272a' }
             }
           }
         }
       });
     }
+
     function setDefault200Days() {
-      const end =
-        new Date();
-      const start =
-        new Date();
-      start.setDate(
-        start.getDate() - 200
-      );
-      document.getElementById('startDate')
-        .value =
-        start.toISOString().split('T')[0];
-      document.getElementById('endDate')
-        .value =
-        end.toISOString().split('T')[0];
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 200);
+      
+      document.getElementById('startDate').value = start.toISOString().split('T')[0];
+      document.getElementById('endDate').value = end.toISOString().split('T')[0];
       runDCASimulation();
     }
+
     window.onload = () => {
-      const today =
-        new Date()
-          .toISOString()
-          .split('T')[0];
-      document.getElementById('endDate')
-        .value = today;
-      const start =
-        new Date();
-      start.setDate(
-        start.getDate() - 200
-      );
-      document.getElementById('startDate')
-        .value =
-        start.toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('endDate').value = today;
+      
+      const start = new Date();
+      start.setDate(start.getDate() - 200);
+      document.getElementById('startDate').value = start.toISOString().split('T')[0];
     };
   </script>
+
 <!-- DISCLAIMER -->
 <div class="max-w-7xl mx-auto px-5 pb-20">
   <div class="bg-zinc-950/50 border border-zinc-900 rounded-3xl p-8 text-sm text-zinc-500 leading-relaxed">
-    
     <div class="flex items-center gap-2 mb-4">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-400"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       <span class="font-semibold text-zinc-300 uppercase tracking-wider text-xs">Legal Disclaimer</span>
