@@ -193,10 +193,17 @@
         <canvas id="dcaChart"></canvas>
       </div>
     </div>
-    <!-- Canvas-Safe Center-Aligned Watermark -->
-    <div class="mt-6 pt-2 flex items-center justify-end gap-1.5 text-zinc-600 text-xs tracking-wider font-semibold select-none">
-      <svg viewBox="0 0 24 24" class="w-[14px] h-[14px] fill-current flex-shrink-0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      <span class="leading-[14px] h-[14px] flex items-center">lalayan_su</span>
+    <!-- Clickable Profile Link Watermark -->
+    <div class="mt-6 pt-2 flex justify-end">
+      <a 
+        href="https://x.com/lalayan_su" 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        class="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-400 text-xs tracking-wider font-semibold select-none transition-colors duration-200"
+      >
+        <svg viewBox="0 0 24 24" class="w-[14px] h-[14px] fill-current flex-shrink-0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <span class="leading-[14px] h-[14px] flex items-center">lalayan_su</span>
+      </a>
     </div>
   </div>
 
@@ -259,10 +266,17 @@
           <canvas id="battleChart"></canvas>
         </div>
       </div>
-      <!-- Canvas-Safe Center-Aligned Watermark -->
-      <div class="mt-6 pt-2 flex items-center justify-end gap-1.5 text-zinc-600 text-xs tracking-wider font-semibold select-none">
-        <svg viewBox="0 0 24 24" class="w-[14px] h-[14px] fill-current flex-shrink-0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        <span class="leading-[14px] h-[14px] flex items-center">lalayan_su</span>
+      <!-- Clickable Profile Link Watermark -->
+      <div class="mt-6 pt-2 flex justify-end">
+        <a 
+          href="https://x.com/lalayan_su" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-400 text-xs tracking-wider font-semibold select-none transition-colors duration-200"
+        >
+          <svg viewBox="0 0 24 24" class="w-[14px] h-[14px] fill-current flex-shrink-0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          <span class="leading-[14px] h-[14px] flex items-center">lalayan_su</span>
+        </a>
       </div>
     </div>
   </div>
@@ -311,8 +325,9 @@
     function exportCardAsPhoto(cardId, baseFileName) {
       const targetCard = document.getElementById(cardId);
       const actionButton = targetCard.querySelector('button');
+      const profileLink = targetCard.querySelector('a');
       
-      // Temporarily hide the capture button from appearing inside the final picture asset
+      // Temporarily hide interactive layout elements during the raw capture phase
       if (actionButton) actionButton.style.visibility = 'hidden';
 
       const assetSelector = document.getElementById('asset');
@@ -331,7 +346,7 @@
         downloadAnchor.href = canvas.toDataURL('image/png');
         downloadAnchor.click();
         
-        // Restore visibility to layout UI
+        // Restore visibility to layout UI elements
         if (actionButton) actionButton.style.visibility = 'visible';
       }).catch(err => {
         console.error('Snapshot Engine exception context: ', err);
