@@ -283,9 +283,17 @@
   
   <!-- 4. HISTORY TABLE -->
   <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 overflow-auto mb-12">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <h2 class="text-2xl font-semibold">DCA Investment History</h2>
-      <p class="text-zinc-500 text-sm">Showing latest 300 buys</p>
+      <div class="flex items-center gap-4">
+        <p class="text-zinc-500 text-sm">Showing latest 300 buys</p>
+        <button 
+          id="exportCsvBtn"
+          class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2"
+        >
+          📄 Export CSV
+        </button>
+      </div>
     </div>
     <table class="w-full min-w-[760px]">
       <thead>
@@ -306,12 +314,14 @@
     let dcaChartInstance = null;
     let battleChartInstance = null;
     let lastRunData = null;
+    let tableRowsData = []; // Full transaction tracker matrix for global data conversions
     const MAX_TABLE_ROWS = 300;
     const numberFormatter = new Intl.NumberFormat();
 
     document.getElementById('runBtn').addEventListener('click', runDCASimulation);
     document.getElementById('daysBtn').addEventListener('click', setDefault200Days);
     document.getElementById('battleBtn').addEventListener('click', runLumpSumBattle);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportFullHistoryToCSV);
 
     // Snapshot/Exporter Event Listeners
     document.getElementById('exportDcaBtn').addEventListener('click', () => {
@@ -321,11 +331,47 @@
       exportCardAsPhoto('battleChartCard', 'dca-vs-lump-sum-battle');
     });
 
+    // Full Matrix CSV Streaming Exporter
+    function exportFullHistoryToCSV() {
+      if (!tableRowsData || tableRowsData.length === 0) return;
+
+      const assetSelector = document.getElementById('asset');
+      const cryptoLabel = assetSelector.options[assetSelector.selectedIndex].text;
+      const coinName = cryptoLabel.match(/\((.*?)\)/)[1];
+
+      // Define standard RFC 4180 CSV Headers
+      const headers = ['Date', 'Asset Price ($)', `Amount Bought (${coinName})`, `Total Coins Accumulated (${coinName})`, 'Portfolio Value Today ($)'];
+      
+      // Build string buffer mapping values cleanly without commas interfering
+      const csvRows = [headers.join(',')];
+
+      tableRowsData.forEach(row => {
+        csvRows.push([
+          row.date,
+          row.price.toFixed(2),
+          row.bought.toFixed(8),
+          row.totalCoins.toFixed(8),
+          row.portfolioValue.toFixed(2)
+        ].join(','));
+      });
+
+      const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+      const encodedUri = encodeURI(csvContent);
+      
+      const downloadAnchor = document.createElement('a');
+      const formattedAsset = cryptoLabel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      downloadAnchor.setAttribute('href', encodedUri);
+      downloadAnchor.setAttribute('download', `dca_full_history_${formattedAsset}_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(downloadAnchor);
+      
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+    }
+
     // High-Resolution Snapshot Processing Engine
     function exportCardAsPhoto(cardId, baseFileName) {
       const targetCard = document.getElementById(cardId);
       const actionButton = targetCard.querySelector('button');
-      const profileLink = targetCard.querySelector('a');
       
       // Temporarily hide interactive layout elements during the raw capture phase
       if (actionButton) actionButton.style.visibility = 'hidden';
@@ -425,7 +471,7 @@
         const labels = [];
         const dcaValues = [];
         const holdValues = [];
-        const tableRowsData = [];
+        tableRowsData = []; // Wipe historical state arrays before writing simulation run indices
 
         // DCA PERIOD
         data.forEach((candle, index) => {
@@ -453,7 +499,7 @@
             totalCoins += bought;
             totalInvested += investAmount;
             
-            // Store for table
+            // Store for table tracking (Retained for global exports)
             tableRowsData.push({
               date: dateStr,
               price: closePrice,
@@ -470,7 +516,7 @@
           holdValues.push(null);
         });
 
-        // Generate table HTML (only show actual buy events)
+        // Generate table HTML (sliced performance configuration capped to max rows safely)
         const tableBody = document.getElementById('tableBody');
         let rows = '';
         const visibleTableData = tableRowsData.slice(-MAX_TABLE_ROWS);
