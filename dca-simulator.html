@@ -184,14 +184,37 @@
     <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data</p>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- DCA Battle Card -->
       <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-        <h3 class="text-2xl font-semibold mb-4">📊 DCA Strategy</h3>
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="text-2xl font-semibold">📊 DCA Strategy</h3>
+          <!-- Interactive Info Tooltip -->
+          <div class="group relative inline-block cursor-help outline-none" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500 hover:text-zinc-300 transition-colors"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-focus-within:block w-64 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-normal rounded-2xl p-4 shadow-2xl z-50 normal-case tracking-normal whitespace-normal pointer-events-none">
+              <strong class="text-white block mb-1 font-semibold">Dollar-Cost Averaging</strong>
+              Spreads out your total asset capital across fixed time intervals (daily, weekly, or monthly). This system eliminates emotional timing risks and systematically builds position sizing at a blended average price index.
+            </div>
+          </div>
+        </div>
         <p class="text-zinc-400 text-sm mb-2">Final Portfolio Value</p>
         <p id="battleDcaValue" class="text-5xl font-bold mb-3">$0</p>
         <p id="battleDcaRoi" class="text-sm"></p>
       </div>
+
+      <!-- Lump Sum Battle Card -->
       <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
-        <h3 class="text-2xl font-semibold mb-4">💰 Lump Sum Strategy</h3>
+        <div class="flex items-center gap-2 mb-4">
+          <h3 class="text-2xl font-semibold">💰 Lump Sum Strategy</h3>
+          <!-- Interactive Info Tooltip -->
+          <div class="group relative inline-block cursor-help outline-none" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500 hover:text-zinc-300 transition-colors"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-focus-within:block w-64 bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-normal rounded-2xl p-4 shadow-2xl z-50 normal-case tracking-normal whitespace-normal pointer-events-none">
+              <strong class="text-white block mb-1 font-semibold">Lump Sum Investing</strong>
+              Deploys 100% of your configuration capital immediately on Day 1 of the selected timeline. This maximizes total market exposure instantly, typically outperforming DCA in long-term secular bull trend lines, but increases initial downside vulnerability.
+            </div>
+          </div>
+        </div>
         <p class="text-zinc-400 text-sm mb-2">Final Portfolio Value</p>
         <p id="battleLumpValue" class="text-5xl font-bold mb-3">$0</p>
         <p id="battleLumpRoi" class="text-sm"></p>
