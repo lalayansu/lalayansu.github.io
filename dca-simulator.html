@@ -143,8 +143,9 @@
     <!-- LOADING -->
     <div
       id="loading"
-      class="hidden text-center py-10 text-zinc-400 text-lg"
+      class="hidden text-center py-12 text-zinc-400 text-lg"
     >
+      <div class="inline-block animate-spin rounded-full h-6 w-6 border-2 border-zinc-500 border-t-white mr-3 align-middle"></div>
       Fetching market data...
     </div>
 
@@ -153,6 +154,17 @@
       id="error"
       class="hidden bg-red-950 border border-red-800 text-red-300 rounded-3xl p-6 mb-8 text-center"
     ></div>
+
+<!-- EMPTY STATE PLACEHOLDER (Visible before run) -->
+<div id="dcaPlaceholder" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-12 text-center my-8 flex flex-col items-center justify-center min-h-[360px]">
+  <div class="w-16 h-16 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 mb-5 shadow-inner">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+  </div>
+  <h3 class="text-xl font-semibold mb-2">No Simulation Active</h3>
+  <p class="text-zinc-400 max-w-sm text-sm leading-relaxed">
+    Select your asset, setup an accumulation threshold scale, and run the simulator to visualize performance metrics.
+  </p>
+</div>
 
 <!-- RESULTS WRAPPER (Hidden by default) -->
 <div id="dcaResults" class="hidden">
@@ -423,6 +435,7 @@
     async function runDCASimulation() {
       try {
         document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('dcaPlaceholder').classList.add('hidden');
         document.getElementById('dcaResults').classList.add('hidden');
         document.getElementById('battleSection').classList.add('hidden');
         document.getElementById('error').classList.add('hidden');
@@ -441,6 +454,7 @@
         if (!startStr || !endStr) {
           alert("Please select dates");
           document.getElementById('loading').classList.add('hidden');
+          document.getElementById('dcaPlaceholder').classList.remove('hidden');
           return;
         }
 
@@ -621,6 +635,7 @@
         console.error(error);
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('error').classList.remove('hidden');
+        document.getElementById('dcaPlaceholder').classList.remove('hidden');
         document.getElementById('error').innerHTML = `Could not fetch data.<br><br>${error.message}`;
       }
     }
@@ -802,7 +817,7 @@
       <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.62.15-.15 2.7-2.46 2.75-2.67.01-.03.01-.15-.06-.21-.07-.06-.17-.04-.25-.02-.11.02-1.78 1.14-5.05 3.34-.48.33-.91.49-1.29.48-.42-.01-1.22-.24-1.82-.44-.74-.24-1.33-.37-1.28-.79.03-.22.33-.44.9-.67 3.52-1.53 5.87-2.54 7.04-3 3.35-1.32 4.04-1.51 4.5-.16.03.09.04.17.02.26z"/></svg>
     </a>
 
-    <!-- Threads (Updated Official Icon Placement) -->
+    <!-- Threads -->
     <a 
       href="https://www.threads.com/@lalayan.su" 
       target="_blank" 
