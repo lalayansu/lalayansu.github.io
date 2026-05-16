@@ -6,6 +6,8 @@
   <title>DCA Simulator + Lump Sum Battle</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Added html2canvas CDN for high-fidelity photo exporting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body {
@@ -153,9 +155,17 @@
     </div>
   </div>
 
-  <!-- 2. DCA GROWTH CHART -->
-  <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
-    <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth (DCA)</h2>
+  <!-- 2. DCA GROWTH CHART CARD (Added wrapper ID and screenshot button) -->
+  <div id="dcaChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth (DCA)</h2>
+      <button 
+        id="exportDcaBtn" 
+        class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
+      >
+        📸 Save Image
+      </button>
+    </div>
     <div class="relative w-full h-[320px] md:h-[560px]">
       <canvas id="dcaChart"></canvas>
     </div>
@@ -180,8 +190,18 @@
         <p id="battleLumpRoi" class="text-sm"></p>
       </div>
     </div>
-    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
-      <h2 class="text-xl md:text-2xl font-semibold mb-6">Portfolio Growth Battle</h2>
+    
+    <!-- BATTLE CHART CARD (Added wrapper ID and screenshot button) -->
+    <div id="battleChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth Battle</h2>
+        <button 
+          id="exportBattleBtn" 
+          class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
+        >
+          📸 Save Image
+        </button>
+      </div>
       <div class="relative w-full h-[320px] md:h-[560px]">
         <canvas id="battleChart"></canvas>
       </div>
@@ -219,6 +239,46 @@
     document.getElementById('runBtn').addEventListener('click', runDCASimulation);
     document.getElementById('daysBtn').addEventListener('click', setDefault200Days);
     document.getElementById('battleBtn').addEventListener('click', runLumpSumBattle);
+
+    // Screenshot/Exporter Event Listeners
+    document.getElementById('exportDcaBtn').addEventListener('click', () => {
+      exportCardAsPhoto('dcaChartCard', 'dca-portfolio-growth');
+    });
+    document.getElementById('exportBattleBtn').addEventListener('click', () => {
+      exportCardAsPhoto('battleChartCard', 'dca-vs-lump-sum-battle');
+    });
+
+    // High-Resolution Screenshot Processing Engine
+    function exportCardAsPhoto(cardId, baseFileName) {
+      const targetCard = document.getElementById(cardId);
+      const actionButton = targetCard.querySelector('button');
+      
+      // Temporarily hide the capture button from appearing inside the final picture asset
+      if (actionButton) actionButton.style.visibility = 'hidden';
+
+      const assetSelector = document.getElementById('asset');
+      const cryptoName = assetSelector.options[assetSelector.selectedIndex].text.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const finalFileName = `${baseFileName}_${cryptoName}_${new Date().toISOString().split('T')[0]}.png`;
+
+      html2canvas(targetCard, {
+        backgroundColor: '#09090b', // Explicit background matching Tailwind's bg-zinc-950 
+        scale: 2,                  // Doubles internal pixel grid sizing for sharp/HD typography + line rendering
+        logging: false,
+        useCORS: true,
+        willReadFrequently: true
+      }).then(canvas => {
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.download = finalFileName;
+        downloadAnchor.href = canvas.toDataURL('image/png');
+        downloadAnchor.click();
+        
+        // Restore visibility to layout UI
+        if (actionButton) actionButton.style.visibility = 'visible';
+      }).catch(err => {
+        console.error('Snapshot Engine exception context: ', err);
+        if (actionButton) actionButton.style.visibility = 'visible';
+      });
+    }
 
     async function fetchAllKlines(symbol, startTime, endTime) {
       let allData = [];
@@ -306,10 +366,8 @@
           if (frequency === 'daily') {
             shouldBuy = true;
           } else if (frequency === 'weekly') {
-            // Buys on Day 1, and every 7th day after
             shouldBuy = (index % 7 === 0);
           } else if (frequency === 'monthly') {
-            // Buys on Day 1, and the first candle of each new month
             if (index === 0 || currentMonth !== lastBuyMonth) {
               shouldBuy = true;
               lastBuyMonth = currentMonth;
