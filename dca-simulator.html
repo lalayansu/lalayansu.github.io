@@ -6,7 +6,7 @@
   <title>DCA Simulator + Lump Sum Battle</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Added html2canvas CDN for high-fidelity photo exporting -->
+  <!-- html2canvas CDN for high-fidelity photo exporting -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -155,19 +155,26 @@
     </div>
   </div>
 
-  <!-- 2. DCA GROWTH CHART CARD (Added wrapper ID and screenshot button) -->
-  <div id="dcaChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth (DCA)</h2>
-      <button 
-        id="exportDcaBtn" 
-        class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
-      >
-        📸 Save Image
-      </button>
+  <!-- 2. DCA GROWTH CHART CARD -->
+  <div id="dcaChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12 flex flex-col justify-between">
+    <div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth (DCA)</h2>
+        <button 
+          id="exportDcaBtn" 
+          class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
+        >
+          📸 Save Image
+        </button>
+      </div>
+      <div class="relative w-full h-[320px] md:h-[560px]">
+        <canvas id="dcaChart"></canvas>
+      </div>
     </div>
-    <div class="relative w-full h-[320px] md:h-[560px]">
-      <canvas id="dcaChart"></canvas>
+    <!-- X Handle Watermark Element -->
+    <div class="mt-6 pt-2 flex items-center justify-end gap-2 text-zinc-600 text-xs tracking-wider font-semibold select-none">
+      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      <span>lalayan_su</span>
     </div>
   </div>
 
@@ -191,19 +198,26 @@
       </div>
     </div>
     
-    <!-- BATTLE CHART CARD (Added wrapper ID and screenshot button) -->
-    <div id="battleChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth Battle</h2>
-        <button 
-          id="exportBattleBtn" 
-          class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
-        >
-          📸 Save Image
-        </button>
+    <!-- BATTLE CHART CARD -->
+    <div id="battleChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 flex flex-col justify-between">
+      <div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 class="text-xl md:text-2xl font-semibold">Portfolio Growth Battle</h2>
+          <button 
+            id="exportBattleBtn" 
+            class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
+          >
+            📸 Save Image
+          </button>
+        </div>
+        <div class="relative w-full h-[320px] md:h-[560px]">
+          <canvas id="battleChart"></canvas>
+        </div>
       </div>
-      <div class="relative w-full h-[320px] md:h-[560px]">
-        <canvas id="battleChart"></canvas>
+      <!-- X Handle Watermark Element -->
+      <div class="mt-6 pt-2 flex items-center justify-end gap-2 text-zinc-600 text-xs tracking-wider font-semibold select-none">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        <span>lalayan_su</span>
       </div>
     </div>
   </div>
@@ -240,7 +254,7 @@
     document.getElementById('daysBtn').addEventListener('click', setDefault200Days);
     document.getElementById('battleBtn').addEventListener('click', runLumpSumBattle);
 
-    // Screenshot/Exporter Event Listeners
+    // Snapshot/Exporter Event Listeners
     document.getElementById('exportDcaBtn').addEventListener('click', () => {
       exportCardAsPhoto('dcaChartCard', 'dca-portfolio-growth');
     });
@@ -248,7 +262,7 @@
       exportCardAsPhoto('battleChartCard', 'dca-vs-lump-sum-battle');
     });
 
-    // High-Resolution Screenshot Processing Engine
+    // High-Resolution Snapshot Processing Engine
     function exportCardAsPhoto(cardId, baseFileName) {
       const targetCard = document.getElementById(cardId);
       const actionButton = targetCard.querySelector('button');
