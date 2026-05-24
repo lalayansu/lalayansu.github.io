@@ -15,32 +15,32 @@
   </div>
 
   <!-- Progress -->
-<div style="background:#1a1a1a;padding:16px;border-radius:16px;">
-  <div style="display:flex;justify-content:space-between;font-size:14px;">
-    <span id="dayText"></span>
-    <span id="percentText" style="background:#2a2a2a;padding:4px 8px;border-radius:10px;"></span>
+  <div style="background:#1a1a1a;padding:16px;border-radius:16px;">
+    <div style="display:flex;justify-content:space-between;font-size:14px;">
+      <span id="dayText"></span>
+      <span id="percentText" style="background:#2a2a2a;padding:4px 8px;border-radius:10px;"></span>
+    </div>
+
+    <div style="background:#333;height:6px;border-radius:6px;margin-top:10px;">
+      <div id="progressBar" style="background:#f5b942;height:6px;width:0%;border-radius:6px;"></div>
+    </div>
   </div>
 
-  <div style="background:#333;height:6px;border-radius:6px;margin-top:10px;">
-    <div id="progressBar" style="background:#f5b942;height:6px;width:0%;border-radius:6px;"></div>
-  </div>
-</div>
+  <script>
+    const totalDays = 200;
+    const startDate = new Date("2026-05-01"); 
 
-<script>
-  const totalDays = 200;
-  const startDate = new Date("2026-05-01"); 
+    const today = new Date();
+    const diffTime = today - startDate;
+    const currentDay = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-  const today = new Date();
-  const diffTime = today - startDate;
-  const currentDay = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const safeDay = Math.max(1, Math.min(currentDay, totalDays));
+    const percent = ((safeDay / totalDays) * 100).toFixed(1);
 
-  const safeDay = Math.max(1, Math.min(currentDay, totalDays));
-  const percent = ((safeDay / totalDays) * 100).toFixed(1);
-
-  document.getElementById("dayText").innerText = `Day ${safeDay} of ${totalDays}`;
-  document.getElementById("percentText").innerText = `${percent}%`;
-  document.getElementById("progressBar").style.width = `${percent}%`;
-</script>
+    document.getElementById("dayText").innerText = `Day ${safeDay} of ${totalDays}`;
+    document.getElementById("percentText").innerText = `${percent}%`;
+    document.getElementById("progressBar").style.width = `${percent}%`;
+  </script>
 
   <!-- Links -->
   <div style="margin-top:24px;">
@@ -50,6 +50,12 @@
        🚀 DCA Simulator
     </a>
     
+    <!-- New Portfolio Tracker Card -->
+    <a href="https://bit.ly/btc_portfolio" target="_blank"
+       style="display:block;background:#1a1a1a;padding:16px;border-radius:16px;margin-top:8px;text-decoration:none;color:white;">
+       📊 Track Portfolio
+    </a>
+
     <a href="https://x.com/lalayan_su" target="_blank"
        style="display:block;background:#1a1a1a;padding:16px;border-radius:16px;margin-top:8px;text-decoration:none;color:white;">
        X (Twitter)
