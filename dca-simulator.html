@@ -33,7 +33,7 @@
         </div>
       </div>
       <p class="text-zinc-400 text-lg">
-        Simulate Dollar Cost Averaging • Real Binance data
+        Simulate Dollar Cost Averaging • Real Binance data • Advanced Metrics
       </p>
     </div>
 
@@ -171,8 +171,8 @@
 
     <!-- RESULTS WRAPPER -->
     <div id="dcaResults" class="hidden">
-      <!-- 1. SUMMARY STATS -->
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-12">
+      <!-- 1. SUMMARY STATS (now 5 cards with Avg Cost Basis) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 mb-12">
         <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
           <p class="text-zinc-400 text-sm mb-2">Total Invested</p>
           <p id="totalInvested" class="text-4xl font-bold">$0</p>
@@ -190,13 +190,19 @@
           <p class="text-zinc-400 text-sm mb-2">Current Asset Price</p>
           <p id="currentPrice" class="text-4xl font-bold">$0</p>
         </div>
+        <!-- NEW: Average Cost Basis -->
+        <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+          <p class="text-zinc-400 text-sm mb-2">Avg Cost Basis</p>
+          <p id="avgCostBasis" class="text-4xl font-bold">$0</p>
+          <p class="text-xs text-emerald-400 mt-2">DCA smoothing in action</p>
+        </div>
       </div>
 
-      <!-- 2. DCA GROWTH CHART CARD -->
+      <!-- 2. DCA GROWTH CHART CARD (now includes Asset Price + Avg Cost Basis lines) -->
       <div id="dcaChartCard" class="bg-zinc-950 border border-zinc-800 rounded-3xl p-4 md:p-8 mb-12 flex flex-col justify-between">
         <div>
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 id="dcaChartTitle" class="text-xl md:text-2xl font-semibold">Portfolio Growth (DCA)</h2>
+            <h2 id="dcaChartTitle" class="text-xl md:text-2xl font-semibold">Portfolio Growth + Cost Basis Analysis</h2>
             <button 
               id="exportDcaBtn" 
               class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white px-4 py-2 rounded-2xl text-sm font-medium transition flex items-center gap-2 self-start sm:self-auto"
@@ -222,10 +228,10 @@
         </div>
       </div>
 
-      <!-- 3. BATTLE SECTION  -->
+      <!-- 3. BATTLE SECTION -->
       <div id="battleSection" class="hidden mb-12">
         <h2 class="text-3xl font-bold mb-2">Lump Sum vs DCA Battle</h2>
-        <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data</p>
+        <p class="text-zinc-400 mb-8">Same total capital • Same period • Real Binance data • Advanced Metrics</p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <!-- DCA Battle Card -->
@@ -262,6 +268,34 @@
             <p class="text-zinc-400 text-sm mb-2">Final Portfolio Value</p>
             <p id="battleLumpValue" class="text-5xl font-bold mb-3">$0</p>
             <p id="battleLumpRoi" class="text-sm"></p>
+          </div>
+        </div>
+
+        <!-- NEW: Advanced Performance Metrics (Max Drawdown for both strategies) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xl font-semibold flex items-center gap-2">
+                  📉 DCA Max Drawdown
+                </h3>
+                <p class="text-zinc-400 text-sm">Peak-to-trough decline (lower = better)</p>
+              </div>
+              <p id="dcaMaxDrawdown" class="text-5xl font-bold text-red-400">-0.00%</p>
+            </div>
+            <p class="text-xs text-emerald-400 mt-4">DCA typically shows significantly softer drawdowns</p>
+          </div>
+          <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xl font-semibold flex items-center gap-2">
+                  📉 Lump Sum Max Drawdown
+                </h3>
+                <p class="text-zinc-400 text-sm">Peak-to-trough decline (higher risk)</p>
+              </div>
+              <p id="lumpMaxDrawdown" class="text-5xl font-bold text-red-400">-0.00%</p>
+            </div>
+            <p class="text-xs text-amber-400 mt-4">Full exposure from Day 1 amplifies volatility</p>
           </div>
         </div>
         
@@ -436,6 +470,21 @@
       return allData;
     }
 
+    // NEW: Professional Max Drawdown calculator
+    function calculateMaxDrawdown(portfolioValues) {
+      if (!portfolioValues || portfolioValues.length === 0) return 0;
+      let maxDD = 0;
+      let peak = portfolioValues[0];
+      for (let value of portfolioValues) {
+        if (value > peak) peak = value;
+        if (peak > 0) {
+          const dd = ((peak - value) / peak) * 100;
+          if (dd > maxDD) maxDD = dd;
+        }
+      }
+      return maxDD;
+    }
+
     async function runDCASimulation() {
       try {
         document.getElementById('loading').classList.remove('hidden');
@@ -449,8 +498,8 @@
         const assetLabel = document.getElementById('asset').options[document.getElementById('asset').selectedIndex].text;
         const coinName = assetLabel.match(/\((.*?)\)/)[1];
         
-        // Dynamically append selected coin name to the chart header title
-        document.getElementById('dcaChartTitle').textContent = `${assetLabel} Portfolio Growth`;
+        // Updated chart title with new advanced metrics
+        document.getElementById('dcaChartTitle').textContent = `${assetLabel} Portfolio Growth + Cost Basis`;
         
         const frequency = document.getElementById('frequency').value;
         const investAmount = parseFloat(document.getElementById('investmentAmount').value) || 25;
@@ -484,6 +533,8 @@
         const labels = [];
         const dcaValues = [];
         const holdValues = [];
+        const assetPrices = [];      // NEW: for chart
+        const avgCosts = [];         // NEW: for chart
         tableRowsData = [];
 
         data.forEach((candle, index) => {
@@ -520,9 +571,13 @@
           }
 
           const portfolioValue = totalCoins * closePrice;
+          const currentAvgCost = totalCoins > 0 ? totalInvested / totalCoins : 0;
+
           labels.push(dateStr);
           dcaValues.push(portfolioValue);
           holdValues.push(null);
+          assetPrices.push(closePrice);
+          avgCosts.push(currentAvgCost);
         });
 
         const tableBody = document.getElementById('tableBody');
@@ -545,30 +600,35 @@
           holdValues[holdValues.length - 1] = dcaValues[dcaValues.length - 1];
         }
 
+        // Future data (post-DCA holding period)
         futureData.forEach((candle) => {
           const closePrice = parseFloat(candle[4]);
           const date = new Date(candle[0]).toISOString().split('T')[0];
           const portfolioValue = totalCoins * closePrice;
+          const currentAvgCost = totalCoins > 0 ? totalInvested / totalCoins : 0;
 
           labels.push(date);
           dcaValues.push(null);
           holdValues.push(portfolioValue);
+          assetPrices.push(closePrice);
+          avgCosts.push(currentAvgCost);
         });
 
         const portfolioToday = totalCoins * currentPrice;
         const roi = totalInvested > 0 ? ((portfolioToday - totalInvested) / totalInvested) * 100 : 0;
+        const finalAvgCost = totalCoins > 0 ? totalInvested / totalCoins : 0;
 
+        // Populate summary stats (including new Avg Cost Basis)
         document.getElementById('totalInvested').textContent = `$${numberFormatter.format(totalInvested.toFixed(2))}`;
         document.getElementById('totalCoins').textContent = `${totalCoins.toFixed(6)} ${coinName}`;
         document.getElementById('valueToday').textContent = `$${numberFormatter.format(portfolioToday.toFixed(2))}`;
         document.getElementById('currentPrice').textContent = `$${numberFormatter.format(currentPrice.toFixed(2))}`;
+        document.getElementById('avgCostBasis').textContent = `$${numberFormatter.format(finalAvgCost.toFixed(2))}`;
         
         document.getElementById('roiToday').innerHTML = 
           `<span class="${roi >= 0 ? 'text-green-400' : 'text-red-400'}">${roi.toFixed(2)}%</span>`;
 
-        if (dcaChartInstance) {
-          dcaChartInstance.destroy();
-        }
+        if (dcaChartInstance) dcaChartInstance.destroy();
         
         const dcaCtx = document.getElementById('dcaChart');
         dcaChartInstance = new Chart(dcaCtx, {
@@ -577,12 +637,13 @@
             labels,
             datasets: [
               {
-                label: 'DCA Period',
+                label: 'DCA Portfolio Value',
                 data: dcaValues,
                 borderColor: '#ffffff',
                 borderWidth: 3,
                 pointRadius: 0,
-                tension: 0.35
+                tension: 0.35,
+                yAxisID: 'yValue'
               },
               {
                 label: 'Holding After DCA',
@@ -590,7 +651,29 @@
                 borderColor: '#eab308',
                 borderWidth: 3,
                 pointRadius: 0,
-                tension: 0.35
+                tension: 0.35,
+                yAxisID: 'yValue'
+              },
+              // NEW: Asset Price line (right axis)
+              {
+                label: 'Asset Price',
+                data: assetPrices,
+                borderColor: '#10b981',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0.25,
+                yAxisID: 'yPrice',
+                borderDash: [4, 2]
+              },
+              // NEW: Average Cost Basis line (right axis) – the core DCA smoothing visual
+              {
+                label: 'Avg Cost Basis',
+                data: avgCosts,
+                borderColor: '#8b5cf6',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                tension: 0.25,
+                yAxisID: 'yPrice'
               }
             ]
           },
@@ -601,7 +684,13 @@
             interaction: { intersect: false, mode: 'index' },
             plugins: {
               decimation: { enabled: true, algorithm: 'lttb', samples: 300 },
-              legend: { labels: { color: '#ffffff' } }
+              legend: { 
+                labels: { 
+                  color: '#ffffff',
+                  usePointStyle: true,
+                  padding: 18
+                }
+              }
             },
             scales: {
               x: {
@@ -616,9 +705,29 @@
                 },
                 grid: { color: '#27272a' }
               },
-              y: {
+              yValue: {  // Left axis: Portfolio $
+                type: 'linear',
+                position: 'left',
                 ticks: { color: '#a1a1aa' },
-                grid: { color: '#27272a' }
+                grid: { color: '#27272a' },
+                title: {
+                  display: true,
+                  text: 'Portfolio Value ($)',
+                  color: '#e2e8f0',
+                  font: { size: 13, weight: 500 }
+                }
+              },
+              yPrice: {  // Right axis: Price & Avg Cost $
+                type: 'linear',
+                position: 'right',
+                ticks: { color: '#a1a1aa' },
+                grid: { drawOnChartArea: false, color: '#27272a' },
+                title: {
+                  display: true,
+                  text: 'Price & Avg Cost ($)',
+                  color: '#e2e8f0',
+                  font: { size: 13, weight: 500 }
+                }
               }
             }
           }
@@ -631,7 +740,8 @@
           frequency,
           data,
           futureData,
-          coinName
+          coinName,
+          finalAvgCost
         };
 
         document.getElementById('battleBtn').disabled = false;
@@ -664,7 +774,6 @@
       } = lastRunData;
 
       const assetLabel = document.getElementById('asset').options[document.getElementById('asset').selectedIndex].text;
-      // Dynamically append selected coin name to the battle chart header title
       document.getElementById('battleChartTitle').textContent = `${assetLabel} Lump Sum Battle`;
 
       const battleLabels = [];
@@ -715,6 +824,11 @@
       const dcaROI = ((finalDCA - totalInvested) / totalInvested) * 100;
       const lumpROI = ((finalLump - totalInvested) / totalInvested) * 100;
 
+      // NEW: Calculate Max Drawdown for both strategies (professional risk metric)
+      const dcaMDD = calculateMaxDrawdown(dcaBattleValues);
+      const lumpMDD = calculateMaxDrawdown(lumpBattleValues);
+
+      // Populate battle cards
       document.getElementById('battleDcaValue').textContent = `$${numberFormatter.format(finalDCA.toFixed(2))}`;
       document.getElementById('battleLumpValue').textContent = `$${numberFormatter.format(finalLump.toFixed(2))}`;
       
@@ -724,9 +838,13 @@
       document.getElementById('battleLumpRoi').innerHTML = 
         `<span class="${lumpROI >= 0 ? 'text-green-400' : 'text-red-400'}">${lumpROI.toFixed(2)}%</span>`;
 
-      if (battleChartInstance) {
-        battleChartInstance.destroy();
-      }
+      // NEW: Populate Max Drawdown metrics
+      document.getElementById('dcaMaxDrawdown').innerHTML = 
+        `<span class="text-red-400">-${dcaMDD.toFixed(2)}%</span>`;
+      document.getElementById('lumpMaxDrawdown').innerHTML = 
+        `<span class="text-red-400">-${lumpMDD.toFixed(2)}%</span>`;
+
+      if (battleChartInstance) battleChartInstance.destroy();
       
       const battleCtx = document.getElementById('battleChart');
       battleChartInstance = new Chart(battleCtx, {
